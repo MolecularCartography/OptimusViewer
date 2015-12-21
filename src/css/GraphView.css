@@ -1,0 +1,25 @@
+html {
+  height: 100%;
+}
+
+body {
+    margin-top: 0;
+    min-height: 100%;
+}
+
+.plot_view {
+    font-family: 'Lucida Sans';
+    font-size: 11px;
+}
+
+#splitter {
+    height: 100%;
+    width: 99%;
+    display: inline-block;
+    position: absolute !important;
+}
+
+a
+{
+    outline: none;
+}
