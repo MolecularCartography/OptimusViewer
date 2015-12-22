@@ -98,7 +98,6 @@ void GraphDataController::featureSelectionChanged(const QMultiHash<SampleId, Fea
     const QList<GraphPoint> ms2Points = dataSource->getMs2ScanData(newSelection);
     int nextMs2Index = 0;
     bool moreMs2Points = !ms2Points.isEmpty();
-    qreal lastIntensity = 0.0;
     QMap<SampleId, QMap<FeatureId, int> > lastIndexes;
     for (int xicIndex = 0, xicCount = xicPoints.length(); xicIndex < xicCount; ++xicIndex) {
         const GraphPoint &xicPoint = xicPoints[xicIndex];

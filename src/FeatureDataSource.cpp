@@ -8,7 +8,7 @@
 
 namespace ov {
 
-FeatureDataSource::FeatureDataSource(const DataSourceId &dataSourceId)
+FeatureDataSource::FeatureDataSource()
 {
     db = QSqlDatabase::addDatabase("QSQLITE");
 }

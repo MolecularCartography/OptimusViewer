@@ -57,7 +57,7 @@ function getCoordinates(chart) {
                     yFieldName = yFieldName.slice(0, -delimeter.length);
                 }
                 if ('precursorMz' in originalPoint) {
-                    yFieldName = yFieldName.concat(delimeter, 'Precursor mz: ' + originalPoint['precursorMz'].toString());
+                    yFieldName = ('Precursor mz: ' + originalPoint['precursorMz'].toString()).concat(delimeter, yFieldName);
                 }
                 resultPoint['y'] = yFieldName;
                 resultPoint[yFieldName] = originalPoint[key];

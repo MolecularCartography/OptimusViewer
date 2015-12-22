@@ -14,7 +14,7 @@ class FeatureDataSource: public QObject
     Q_OBJECT
 
 public:
-    explicit FeatureDataSource(const DataSourceId &dataSourceId = DataSourceId());
+    FeatureDataSource();
 
     bool isValid() const;
     QList<GraphPoint> getXicData(const QMultiHash<SampleId, FeatureId> &featuresBySample) const;

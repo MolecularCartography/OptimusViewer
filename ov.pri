@@ -26,3 +26,8 @@ win32 {
     QMAKE_CXXFLAGS_WARN_ON = -W3
     QMAKE_CFLAGS_WARN_ON = -W3
 }
+
+macx {
+    QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.7
+    CONFIG += c++11
+}
