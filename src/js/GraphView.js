@@ -29,6 +29,14 @@ function clone(obj) {
     return copy;
 }
 
+function isEmpty(obj) {
+    for(var prop in obj) {
+        if(obj.hasOwnProperty(prop))
+            return false;
+    }
+    return true && JSON.stringify(obj) === JSON.stringify({});
+}
+
 function getCoordinates(chart) {
     var xCoordKeys = [];
     var yCoordKeys = [];
@@ -182,12 +190,14 @@ function getGraphs(data, horAxisDataId, graphProtoBuilder) {
                     break;
                 }
             }
+            var firstGraphPoint = false;
             if (!(xKey in usedKeys)) {
                 var currentGraph = graphProtoBuilder(yKey);
                 currentGraph['xField'] = xKey;
                 currentGraph['yField'] = yKey;
                 usedKeys[xKey] = null;
                 graphs.push(currentGraph);
+                firstGraphPoint = true;
             }
 
             if (horAxisDataId == 'rt_') { // TODO: refactor
@@ -201,16 +211,20 @@ function getGraphs(data, horAxisDataId, graphProtoBuilder) {
                     data[i]['color'] = '#A8A8A8';
                     data[i]['bulletSize'] = 0.5;
                 }
+                if (firstGraphPoint) {
+                    var boundaryPoint = clone(data[i]);
+                    boundaryPoint[yKey] = 0.0;
+                    boundaryPoint[fakePointKey] = true;
+                    data.splice(i++, 0, boundaryPoint);
+                }
             }
 
             if (horAxisDataId == 'mz_') { // TODO: refactor
                 var precedingPoint = clone(data[i]);
-                precedingPoint[xKey] = data[i][xKey] - 0.000001;
                 precedingPoint[yKey] = 0.0;
                 precedingPoint[fakePointKey] = true;
 
                 var successivePoint = clone(data[i]);
-                successivePoint[xKey] = data[i][xKey] - 0.000001;
                 successivePoint[yKey] = 0.0;
                 successivePoint[fakePointKey] = true;
 
@@ -219,6 +233,35 @@ function getGraphs(data, horAxisDataId, graphProtoBuilder) {
 
                 data.splice(i++, 0, precedingPoint);
                 data.splice(++i, 0, successivePoint);
+            }
+        }
+    }
+
+    if (horAxisDataId == 'rt_') { // TODO: refactor
+        for (var i = data.length - 1; !isEmpty(usedKeys) && i >= 0; --i) {
+            var lastGraphPoint = false;
+            var foundKey = null;
+            for (var key in data[i]) {
+                if (key in usedKeys) {
+                    lastGraphPoint = true;
+                    foundKey = key;
+                    break;
+                }
+            }
+            if (lastGraphPoint) {
+                var yKey;
+                for (var key in data[i]) {
+                    if (key != foundKey && key.indexOf('Sample:') > -1) { // TODO: refactor
+                        yKey = key;
+                        break;
+                    }
+                }
+
+                var boundaryPoint = clone(data[i]);
+                boundaryPoint[yKey] = 0.0;
+                boundaryPoint[fakePointKey] = true;
+                data.splice(i + 1, 0, boundaryPoint);
+                delete usedKeys[foundKey];
             }
         }
     }
