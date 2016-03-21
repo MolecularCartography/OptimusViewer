@@ -202,8 +202,8 @@ void AppView::samplesChanged(const QMap<SampleId, QString> &sampleNameById)
         }
 
         ui->featureTableView->hideColumn(0);
-        for (int column = 1; column < ui->featureTableView->horizontalHeader()->count(); ++column) {
-            ui->featureTableView->horizontalHeader()->setSectionResizeMode(column, QHeaderView::Stretch);
+        for (int column = 1; column < model->columnCount(); ++column) {
+            ui->featureTableView->resizeColumnToContents(column);
         }
     }
 }
