@@ -179,25 +179,49 @@ void FeatureDataSource::selectDataSource()
     DataSourceId dataSourceId = QFileDialog::getOpenFileName(QApplication::activeWindow(), QObject::tr("Open file"), QString(), getInputFileFilter());
     if (dataSourceId.isEmpty()) {
         return;
-    } else if (currentDataSourceId() == dataSourceId) {
-        QMessageBox::information(QApplication::activeWindow(), tr("Info"), tr("Selected database is currently opened."));
     } else if (!setDataSource(dataSourceId)) {
-        QMessageBox::critical(QApplication::activeWindow(), tr("Error"), tr("Unable to read the OptimusFD database."));
+        QMessageBox::critical(QApplication::activeWindow(), tr("Error"), tr("Unable to read the Optimus database."));
     } else {
-        emit samplesChanged(getSampleNameById());
+        updateSamplesInfo();
+        emit samplesChanged();
     }
 }
 
-QMap<SampleId, QString> FeatureDataSource::getSampleNameById()
+SampleId FeatureDataSource::getSampleIdByNumber(int number) const
 {
-    Q_ASSERT(isValid());
-
-    QMap<SampleId, QString> nameById;
-    QSqlQuery query("SELECT id, name FROM Sample");
-    while (query.next()) {
-        nameById[query.value(0).toLongLong()] = query.value(1).toString();
+    if (0 <= number && number < sampleIds.size()) {
+        return sampleIds[number];
+    } else {
+        Q_ASSERT(false);
+        return -1;
     }
-    return nameById;
+}
+
+QString FeatureDataSource::getSampleNameById(const SampleId &id) const
+{
+    if (sampleNameById.contains(id)) {
+        return sampleNameById[id];
+    } else {
+        Q_ASSERT(false);
+        return QString();
+    }
+}
+
+int FeatureDataSource::getSampleCount() const
+{
+    return sampleIds.size();
+}
+
+void FeatureDataSource::updateSamplesInfo()
+{
+    sampleIds.clear();
+
+    QSqlQuery columnsQuery("SELECT id, name FROM Sample ORDER BY id");
+    while (columnsQuery.next()) {
+        const SampleId id = columnsQuery.value(0).value<SampleId>();
+        sampleNameById[id] = columnsQuery.value(1).toString();
+        sampleIds.append(id);
+    }
 }
 
 DataSourceId FeatureDataSource::currentDataSourceId() const
@@ -214,12 +238,25 @@ bool FeatureDataSource::setDataSource(const DataSourceId &dataSourceId)
     }
 
     db.setDatabaseName(dataSourceId);
-    return db.open();
+    const bool storageAvailable = db.open();
+
+    if (storageAvailable) {
+        QSqlQuery prepQuery(
+            "PRAGMA synchronous = OFF;"
+            "PRAGMA main.locking_mode = EXCLUSIVE;"
+            "PRAGMA temp_store = MEMORY;"
+            "PRAGMA journal_mode = MEMORY;"
+            "PRAGMA cache_size = 50000;"
+            "PRAGMA foreign_keys = ON;"
+        );
+    }
+
+    return storageAvailable;
 }
 
 QString FeatureDataSource::getInputFileFilter()
 {
-    return QObject::tr("OptimusFD database (*.db)");
+    return QObject::tr("Optimus database (*.db)");
 }
 
 } // namespace ov

@@ -3,6 +3,8 @@
 #include <QWebSettings>
 #include <QWebView>
 
+#include "FeatureTableModel.h"
+
 #include "AppController.h"
 
 namespace ov {
@@ -15,7 +17,7 @@ AppController::AppController()
     initStatic();
     connectSingals();
 
-    view.initViews();
+    view.initViews(new FeatureTableModel(this, &dataSource));
     view.show();
 }
 

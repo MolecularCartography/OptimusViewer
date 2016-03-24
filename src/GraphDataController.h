@@ -24,12 +24,11 @@ signals:
     void updatePlot(const QVariantMap &data);
 
 public slots:
-    void samplesChanged(const QMap<SampleId, QString> &sampleNameById);
+    void samplesChanged();
     void featureSelectionChanged(const QMultiHash<SampleId, FeatureId> &newSelection, const QMap<FeatureId, qreal> &featureMzs);
 
 private:
     QMultiHash<SampleId, FeatureId> currentFeatures;
-    QMap<SampleId, QString> sampleNameById;
 
     FeatureDataSource *dataSource;
 };

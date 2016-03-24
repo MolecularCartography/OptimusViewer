@@ -3,7 +3,6 @@
 #include <QMessageBox>
 #include <QSortFilterProxyModel>
 #include <QSqlError>
-#include <QSqlQueryModel>
 #include <QTextStream>
 #include <QWebFrame>
 #include <QWebPage>
@@ -11,6 +10,7 @@
 
 #include "ui_AppView.h"
 
+#include "FeatureTableModel.h"
 #include "FeatureTableVisibilityDialog.h"
 
 #include "AppView.h"
@@ -30,10 +30,10 @@ AppView::AppView(QWidget *parent)
     setDefaultSplitterSize();
 }
 
-void AppView::initViews()
+void AppView::initViews(FeatureTableModel *model)
 {
     initGraphView();
-    initFeatureTable();
+    initFeatureTable(model);
 }
 
 AppView::~AppView()
@@ -61,7 +61,7 @@ void AppView::showHideColumnsTriggered()
 {
     Q_ASSERT(-1 != lastReferredLogicalColumn);
 
-    QSqlQueryModel *model = getFeatureTableModel();
+    FeatureTableModel *model = getFeatureTableModel();
     const int columnCount = model->columnCount();
 
     QList<QPair<QString, bool> > headers;
@@ -94,11 +94,14 @@ void AppView::featureTableSelectionChanged(const QItemSelection &selected, const
     QMultiHash<SampleId, FeatureId> currentSelection;
     QMap<FeatureId, qreal> featureMzs;
 
-    QAbstractItemModel *model = ui->featureTableView->model();
+    QSortFilterProxyModel *proxyModel = dynamic_cast<QSortFilterProxyModel *>(ui->featureTableView->model());
+    Q_ASSERT(NULL != proxyModel);
+    FeatureTableModel *model = getFeatureTableModel();
+    Q_ASSERT(NULL != model);
     foreach (const QModelIndex &index, ui->featureTableView->selectionModel()->selectedIndexes()) {
         if (index.column() > 3) {
             const FeatureId featureId = model->data(model->index(index.row(), 0)).value<FeatureId>(); // hidden 0th column contains feature id
-            const SampleId sampleId = sampleIdByColumn[index.column()];
+            const SampleId sampleId = model->getSampleIdByColumnNumber(proxyModel->mapToSource(index).column());
             if (!featureMzs.contains(featureId)) {
                 featureMzs[featureId] = model->data(model->index(index.row(), 1)).toReal(); // the 1st column contains mz value
             }
@@ -144,9 +147,8 @@ void AppView::initGraphView()
     webPage->mainFrame()->setHtml(html);
 }
 
-void AppView::initFeatureTable()
+void AppView::initFeatureTable(FeatureTableModel *model)
 {
-    QSqlQueryModel *model = new QSqlQueryModel(ui->featureTableView);
     QSortFilterProxyModel *proxyModel = new QSortFilterProxyModel(ui->featureTableView);
     proxyModel->setDynamicSortFilter(true);
     proxyModel->setSourceModel(model);
@@ -173,34 +175,22 @@ void AppView::featureTableHeaderContextMenu(const QPoint &p)
     menu->popup(headerView->viewport()->mapToGlobal(p));
 }
 
-QSqlQueryModel * AppView::getFeatureTableModel() const
+FeatureTableModel * AppView::getFeatureTableModel() const
 {
     QSortFilterProxyModel *proxyModel = dynamic_cast<QSortFilterProxyModel *>(ui->featureTableView->model());
     Q_ASSERT(NULL != proxyModel);
-    QSqlQueryModel *model = dynamic_cast<QSqlQueryModel *>(proxyModel->sourceModel());
+    FeatureTableModel *model = dynamic_cast<FeatureTableModel *>(proxyModel->sourceModel());
     Q_ASSERT(NULL != model);
     return model;
 }
 
-void AppView::samplesChanged(const QMap<SampleId, QString> &sampleNameById)
+void AppView::samplesChanged()
 {
-    QSqlQueryModel *model = getFeatureTableModel();
-    model->clear();
-    model->setQuery("SELECT * FROM QuantifiedFeatures");
+    FeatureTableModel *model = getFeatureTableModel();
+    model->reset();
     if (QSqlError::NoError != model->lastError().type()) {
         QMessageBox::critical(this, tr("Error"), model->lastError().text());
     } else {
-        model->setHeaderData(1, Qt::Horizontal, tr("Consensus mz"));
-        model->setHeaderData(2, Qt::Horizontal, tr("Consensus RT"));
-        model->setHeaderData(3, Qt::Horizontal, tr("Consensus charge"));
-
-        sampleIdByColumn.clear();
-        for (int column = 4; column < model->columnCount(); ++column) {
-            const SampleId sampleId = model->headerData(column, Qt::Horizontal).value<SampleId>();
-            model->setHeaderData(column, Qt::Horizontal, sampleNameById[sampleId]);
-            sampleIdByColumn[column] = sampleId;
-        }
-
         ui->featureTableView->hideColumn(0);
         for (int column = 1; column < model->columnCount(); ++column) {
             ui->featureTableView->resizeColumnToContents(column);

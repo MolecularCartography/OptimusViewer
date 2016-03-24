@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QSqlDatabase>
+#include <QVector>
 
 #include "Globals.h"
 #include "GraphPoint.h"
@@ -22,18 +23,25 @@ public:
     QList<GraphPoint> getMs2SpectraData(const QHash<SampleId, QMultiHash<FeatureId, qreal> > &featureScansBySample) const;
     QList<GraphPoint> getIsotopicPatternData(const QMultiHash<SampleId, FeatureId> &featuresBySample) const;
 
+    SampleId getSampleIdByNumber(int number) const;
+    QString getSampleNameById(const SampleId &id) const;
+    int getSampleCount() const;
+
 signals:
-    void samplesChanged(const QMap<SampleId, QString> &sampleNameById);
+    void samplesChanged();
 
 public slots:
     void selectDataSource();
 
 private:
     bool setDataSource(const DataSourceId &dataSourceId);
-    QMap<SampleId, QString> getSampleNameById();
     DataSourceId currentDataSourceId() const;
+    void updateSamplesInfo();
 
     static QString getInputFileFilter();
+
+    QMap<SampleId, QString> sampleNameById;
+    QVector<SampleId> sampleIds;
 
     QSqlDatabase db;
 };

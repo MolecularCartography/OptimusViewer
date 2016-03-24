@@ -8,7 +8,6 @@
 
 class QAction;
 class QItemSelection;
-class QSqlQueryModel;
 class QWebView;
 
 namespace Ui {
@@ -19,6 +18,8 @@ class AppViewUi;
 
 namespace ov {
 
+class FeatureTableModel;
+
 class AppView : public QMainWindow
 {
     Q_OBJECT
@@ -27,7 +28,7 @@ public:
     explicit AppView(QWidget *parent = NULL);
     ~AppView();
 
-    void initViews();
+    void initViews(FeatureTableModel *model);
 
 signals:
     void open();
@@ -38,7 +39,7 @@ signals:
     void featureSelectionChanged(const QMultiHash<SampleId, FeatureId> &newSelection, const QMap<FeatureId, qreal> &featureMzs);
 
 public slots:
-    void samplesChanged(const QMap<SampleId, QString> &sampleNameById);
+    void samplesChanged();
 
 private slots:
     void graphViewLoaded(bool ok);
@@ -50,14 +51,13 @@ private slots:
 private:
     void setDefaultSplitterSize();
     void initGraphView();
-    void initFeatureTable();
+    void initFeatureTable(FeatureTableModel *model);
     void initActions();
     void connectGuiSignals();
     void setShortcuts();
-    QSqlQueryModel * getFeatureTableModel() const;
+    FeatureTableModel * getFeatureTableModel() const;
 
     bool graphViewInited;
-    QMap<int, SampleId> sampleIdByColumn;
     QAction *hideColumnAction;
     QAction *showHideColumnsAction;
     int lastReferredLogicalColumn;

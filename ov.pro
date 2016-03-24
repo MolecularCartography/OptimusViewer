@@ -3,6 +3,7 @@ include (ov.pri)
 HEADERS += src/AppController.h \
            src/AppView.h \
            src/FeatureDataSource.h \
+           src/FeatureTableModel.h \
            src/FeatureTableVisibilityDialog.h \
            src/Globals.h \
            src/GraphDataController.h \
@@ -16,6 +17,7 @@ FORMS += src/ui/AppView.ui \
 SOURCES += src/AppController.cpp \
            src/AppView.cpp \
            src/FeatureDataSource.cpp \
+           src/FeatureTableModel.cpp \
            src/FeatureTableVisibilityDialog.cpp \
            src/Globals.cpp \
            src/GraphDataController.cpp \

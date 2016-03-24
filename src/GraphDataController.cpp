@@ -113,7 +113,7 @@ void GraphDataController::featureSelectionChanged(const QMultiHash<SampleId, Fea
                 QVariantMap variantPlotData;
                 const QString rtKey = createMs2ScanKey(ms2Sample, ms2Feature);
                 variantPlotData[rtKey] = ms2Point.x();
-                const QString intKey = createMs2IntKey(sampleNameById[ms2Sample], featureMzs[ms2Feature]);
+                const QString intKey = createMs2IntKey(dataSource->getSampleNameById(ms2Sample), featureMzs[ms2Feature]);
 
                 GraphPoint nextXicPoint(ms2Sample, ms2Feature, std::numeric_limits<qreal>::max(), 0.0);
                 for (int pos = xicIndex; pos < xicCount; ++pos) {
@@ -143,7 +143,7 @@ void GraphDataController::featureSelectionChanged(const QMultiHash<SampleId, Fea
         const QString rtKey = QString("rt_%1_%2").arg(xicPoint.getSampleId()).arg(xicPoint.getFeatureId());
         variantPlotData[rtKey] = xicPoint.x();
         const QString intKey = QString("Sample: %1<br>Consensus mz: %2<br>")
-            .arg(sampleNameById[xicPoint.getSampleId()]).arg(featureMzs[xicPoint.getFeatureId()]);
+            .arg(dataSource->getSampleNameById(xicPoint.getSampleId())).arg(featureMzs[xicPoint.getFeatureId()]);
         variantPlotData[intKey] = xicPoint.y();
         lastIndexes[xicPoint.getSampleId()][xicPoint.getFeatureId()] = xicIndex;
         xicGraph.append(variantPlotData);
@@ -156,7 +156,7 @@ void GraphDataController::featureSelectionChanged(const QMultiHash<SampleId, Fea
         const QString mzKey = QString("mz_%1_%2").arg(point.getSampleId()).arg(point.getFeatureId());
         variantPlotData[mzKey] = point.x();
         const QString intKey = QString("Sample: %1<br>Consensus mz: %2<br>")
-            .arg(sampleNameById[point.getSampleId()]).arg(featureMzs[point.getFeatureId()]);
+            .arg(dataSource->getSampleNameById(point.getSampleId())).arg(featureMzs[point.getFeatureId()]);
         variantPlotData[intKey] = point.y();
         massPeakGraph.append(variantPlotData);
     }
@@ -207,10 +207,9 @@ QVariantList GraphDataController::getMs2Spectra(const QVariantList &scanTimesByS
     return result;
 }
 
-void GraphDataController::samplesChanged(const QMap<SampleId, QString> &nameById)
+void GraphDataController::samplesChanged()
 {
     currentFeatures.clear();
-    sampleNameById = nameById;
     emit updatePlot(QVariantMap());
 }
 
