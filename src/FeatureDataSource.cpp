@@ -183,6 +183,7 @@ void FeatureDataSource::selectDataSource()
         QMessageBox::critical(QApplication::activeWindow(), tr("Error"), tr("Unable to read the Optimus database."));
     } else {
         updateSamplesInfo();
+        updateFeaturesInfo();
         emit samplesChanged();
     }
 }
@@ -212,15 +213,40 @@ int FeatureDataSource::getSampleCount() const
     return sampleIds.size();
 }
 
+FeatureId FeatureDataSource::getFeatureIdByNumber(int number) const
+{
+    if (0 <= number && number < featureIds.size()) {
+        return featureIds[number];
+    } else {
+        Q_ASSERT(false);
+        return -1;
+    }
+}
+
+int FeatureDataSource::getFeatureCount() const
+{
+    return featureIds.size();
+}
+
 void FeatureDataSource::updateSamplesInfo()
 {
     sampleIds.clear();
 
-    QSqlQuery columnsQuery("SELECT id, name FROM Sample ORDER BY id");
-    while (columnsQuery.next()) {
-        const SampleId id = columnsQuery.value(0).value<SampleId>();
-        sampleNameById[id] = columnsQuery.value(1).toString();
+    QSqlQuery samplesQuery("SELECT id, name FROM Sample ORDER BY id");
+    while (samplesQuery.next()) {
+        const SampleId id = samplesQuery.value(0).value<SampleId>();
+        sampleNameById[id] = samplesQuery.value(1).toString();
         sampleIds.append(id);
+    }
+}
+
+void FeatureDataSource::updateFeaturesInfo()
+{
+    featureIds.clear();
+
+    QSqlQuery featuresQuery("SELECT id FROM Feature ORDER BY consensus_mz");
+    while (featuresQuery.next()) {
+        featureIds.append(featuresQuery.value(0).value<FeatureId>());
     }
 }
 

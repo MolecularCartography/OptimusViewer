@@ -37,7 +37,6 @@ private:
 
     int rowNumber;
     int columnNumber;
-    QVector<FeatureId> rowIds;
     FeatureDataSource *dataSource;
 
     QSqlQuery consensusFeatureFetcher;

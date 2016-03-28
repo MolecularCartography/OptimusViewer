@@ -89,6 +89,10 @@ function generateFormatListMenu(graphId, formats) {
                 // TODO: check the property with future versions of amCharts
                 var cursorAlpha = chart.chartCursor.cursorAlpha;
                 chart.chartCursor.cursorAlpha = 0;
+                var zoomButtonImage = chart.zoomOutButtonImage;
+                chart.zoomOutButtonImage = '';
+                var zoomButtonText = chart.zoomOutText;
+                chart.zoomOutText = '';
                 chart.chartCursor.valueLineBalloonEnabled = false;
 
                 chart.chartScrollbar.enabled = false;
@@ -98,6 +102,8 @@ function generateFormatListMenu(graphId, formats) {
 
                 chart.chartScrollbar.enabled = true;
                 chart.chartCursor.cursorAlpha = cursorAlpha;
+                chart.zoomOutButtonImage = zoomButtonImage;
+                chart.zoomOutText = zoomButtonText;
                 chart.chartCursor.valueLineBalloonEnabled = true;
                 chart.validateData();
             }
@@ -178,6 +184,8 @@ function adjustMassPeakBalloonText(graphDataItem, graph) {
 function getGraphs(data, horAxisDataId, graphProtoBuilder) {
     var graphs = [];
     var usedKeys = {};
+    var rightMostIndexes = {};
+    var orderOfRightBoundaries = [];
     for (var i = 0; i < data.length; ++i) {
         for (var xKey in data[i]) {
             if (xKey.slice(0, horAxisDataId.length) != horAxisDataId) {
@@ -213,9 +221,15 @@ function getGraphs(data, horAxisDataId, graphProtoBuilder) {
                 }
                 if (firstGraphPoint) {
                     var boundaryPoint = clone(data[i]);
+                    delete boundaryPoint['bullet'];
                     boundaryPoint[yKey] = 0.0;
                     boundaryPoint[fakePointKey] = true;
                     data.splice(i++, 0, boundaryPoint);
+                } else {
+                    rightMostIndexes[xKey] = {
+                        index: i,
+                        yAxis: yKey
+                    };
                 }
             }
 
@@ -231,6 +245,8 @@ function getGraphs(data, horAxisDataId, graphProtoBuilder) {
                 data[i]['bullet'] = 'round';
                 data[i]['bulletSize'] = 0.5;
 
+                delete precedingPoint['bullet'];
+                delete successivePoint['bullet'];
                 data.splice(i++, 0, precedingPoint);
                 data.splice(++i, 0, successivePoint);
             }
@@ -238,31 +254,26 @@ function getGraphs(data, horAxisDataId, graphProtoBuilder) {
     }
 
     if (horAxisDataId == 'rt_') { // TODO: refactor
-        for (var i = data.length - 1; !isEmpty(usedKeys) && i >= 0; --i) {
-            var lastGraphPoint = false;
-            var foundKey = null;
-            for (var key in data[i]) {
-                if (key in usedKeys) {
-                    lastGraphPoint = true;
-                    foundKey = key;
-                    break;
+        var xicPointsDescending = [];
+        var usedGraphIds = {};
+        while (Object.keys(usedGraphIds).length != Object.keys(rightMostIndexes).length) {
+            var curMaxIndex = 0;
+            for (var graphId in rightMostIndexes) {
+                if (rightMostIndexes[graphId].index > curMaxIndex && !(graphId in usedGraphIds)) {
+                    xicPointsDescending[Object.keys(usedGraphIds).length] = graphId;
+                    curMaxIndex = rightMostIndexes[graphId].index;
                 }
             }
-            if (lastGraphPoint) {
-                var yKey;
-                for (var key in data[i]) {
-                    if (key != foundKey && key.indexOf('Sample:') > -1) { // TODO: refactor
-                        yKey = key;
-                        break;
-                    }
-                }
+            usedGraphIds[xicPointsDescending[xicPointsDescending.length - 1]] = null;
+        }
 
-                var boundaryPoint = clone(data[i]);
-                boundaryPoint[yKey] = 0.0;
-                boundaryPoint[fakePointKey] = true;
-                data.splice(i + 1, 0, boundaryPoint);
-                delete usedKeys[foundKey];
-            }
+        for (var i = 0; i < xicPointsDescending.length; ++i) {
+            var pointAttrs = rightMostIndexes[xicPointsDescending[i]];
+            var boundaryPoint = clone(data[pointAttrs.index]);
+            boundaryPoint[pointAttrs.yAxis] = 0.0;
+            boundaryPoint[fakePointKey] = true;
+            delete boundaryPoint['bullet'];
+            data.splice(pointAttrs.index + 1, 0, boundaryPoint);
         }
     }
     return graphs;
@@ -272,21 +283,17 @@ var xicGraphSelectionState = {
     _selectedItems: [],
     _selectedCharts: [],
     _alphasByGraph: [],
-    _lastClickEventOffX: 0,
-    _lastClickEventOffY: 0,
     _selectionActive: false,
 
     reset: function() {
         this._selectedItems = [];
         this._selectedCharts = [];
         this._alphasByGraph = [];
-        this._lastClickEventOffX = 0;
-        this._lastClickEventOffY = 0;
         this._selectionActive = false;
     },
 
     deselect: function(event) {
-        if (this._selectionActive && !(this._lastClickEventOffX == event.offsetX && this._lastClickEventOffY == event.offsetY)) {
+        if (this._selectionActive) {
             for (var i = 0; i < this._alphasByGraph.length; ++i) {
                 this._alphasByGraph[i]['graph'].fillAlphas = this._alphasByGraph[i]['fillAlphas'];
                 this._alphasByGraph[i]['graph'].lineAlpha = this._alphasByGraph[i]['lineAlpha'];
@@ -311,10 +318,10 @@ var xicGraphSelectionState = {
     select: function (event) {
         event.event.stopPropagation();
 
-        var isMs2ScanClicked = 'precursorMz' in event.graph.chart.dataProvider[event.item.index];
-        if (!event.event.ctrlKey || !isMs2ScanClicked) {
+        if (!event.event.ctrlKey) {
             this.deselect(event.event);
         }
+        var isMs2ScanClicked = 'precursorMz' in event.graph.chart.dataProvider[event.item.index];
         if (!isMs2ScanClicked) {
             return;
         }
@@ -358,9 +365,6 @@ var xicGraphSelectionState = {
 
             this._selectionActive = true;
         }
-
-        this._lastClickEventOffX = event.event.offsetX;
-        this._lastClickEventOffY = event.event.offsetY;
 
         event.item.dataContext[event.graph.colorField] = '#FFD700';
         event.chart.validateData();
@@ -431,7 +435,6 @@ function createXicChart(div_id, dataProvider, graphs) {
         }],
         'chartScrollbar': generatePlotScrollbarDescriptor(),
         'chartCursor': {
-            'bulletsEnabled': true,
             'valueLineAxis': 'y',
             'valueLineBalloonEnabled': true
         },
@@ -474,7 +477,7 @@ function createMassPeakChart(div_id, dataProvider, graphs) {
             'id': 'x',
             'position': 'bottom',
             'dashLength': 1,
-            'title': 'mz'
+            'title': 'm/z'
         }, {
             'id': 'y',
             'dashLength': 1,

@@ -2,7 +2,7 @@
 Plugin Name: amCharts Export
 Description: Adds export capabilities to amCharts products
 Author: Benjamin Maertz, amCharts
-Version: 1.4.9
+Version: 1.4.14
 Author URI: http://www.amcharts.com/
 
 Copyright 2015 amCharts
@@ -68,7 +68,7 @@ if ( !AmCharts.translations[ "export" ][ "en" ] ) {
 	AmCharts[ "export" ] = function( chart, config ) {
 		var _this = {
 			name: "export",
-			version: "1.4.9",
+			version: "1.4.14",
 			libs: {
 				async: true,
 				autoLoad: true,
@@ -485,6 +485,13 @@ if ( !AmCharts.translations[ "export" ][ "en" ] ) {
 						opacities: [ 1, 0.8, 0.6, 0.4, 0.2 ],
 						menu: undefined,
 						autoClose: true
+					},
+					border: {
+						fill: "",
+						fillOpacity: 0,
+						stroke: "#000000",
+						strokeWidth: 1,
+						strokeOpacity: 1
 					}
 				},
 				pdfMake: {
@@ -711,7 +718,7 @@ if ( !AmCharts.translations[ "export" ][ "en" ] ) {
 						if ( v instanceof Array ) {
 							a[ i1 ] = new Array();
 						} else if ( v instanceof Function ) {
-							a[ i1 ] = new Function();
+							a[ i1 ] = function() {};
 						} else if ( v instanceof Date ) {
 							a[ i1 ] = new Date();
 						} else if ( v instanceof Object ) {
@@ -1544,6 +1551,18 @@ if ( !AmCharts.translations[ "export" ][ "en" ] ) {
 									if ( PID = _this.isHashbanged( g.paths[ i1 ].clipPath ) ) {
 
 										if ( group.clippings && group.clippings[ PID ] ) {
+
+											// TODO: WAIT UNTIL FABRICJS HANDLES CLIPPATH FOR SVG OUTPUT
+											( function( i1, PID ) {
+												var toSVG = g.paths[ i1 ].toSVG;
+
+												g.paths[ i1 ].toSVG = function( original_reviver ) {
+													return toSVG.apply(this, [ function( string ) {
+														return original_reviver( string, group.clippings[ PID ] );
+													} ] );
+												}
+											} )( i1, PID );
+
 											g.paths[ i1 ].set( {
 												clipTo: ( function( i1, PID ) {
 													return function( ctx ) {
@@ -1590,7 +1609,7 @@ if ( !AmCharts.translations[ "export" ][ "en" ] ) {
 										var tmpGroup = new fabric.Group( tmpBuffer, {
 											top: g.paths[ i1 ].top * -1
 										} );
-										_this.setup.fabric.add( tmpGroup );
+										g.paths[ i1 ] = tmpGroup;
 									}
 								}
 								paths.push( g.paths[ i1 ] );
@@ -1615,7 +1634,7 @@ if ( !AmCharts.translations[ "export" ][ "en" ] ) {
 										var elm_parent = balloons[ i1 ];
 										var style_parent = fabric.parseStyleAttribute( elm_parent );
 										var style_text = fabric.parseStyleAttribute( elm_parent.childNodes[ 0 ] );
-										var fabric_label = new fabric.Text( elm_parent.innerText || elm_parent.innerHTML, {
+										var fabric_label = new fabric.Text( elm_parent.innerText || elm_parent.textContent || elm_parent.innerHTML, {
 											selectable: false,
 											top: style_parent.top + group.offset.y,
 											left: style_parent.left + group.offset.x,
@@ -1633,7 +1652,7 @@ if ( !AmCharts.translations[ "export" ][ "en" ] ) {
 							if ( group.svg.nextSibling && group.svg.nextSibling.tagName == "A" ) {
 								var elm_parent = group.svg.nextSibling;
 								var style_parent = fabric.parseStyleAttribute( elm_parent );
-								var fabric_label = new fabric.Text( elm_parent.innerText || elm_parent.innerHTML, {
+								var fabric_label = new fabric.Text( elm_parent.innerText || elm_parent.textContent || elm_parent.innerHTML, {
 									selectable: false,
 									top: style_parent.top + group.offset.y,
 									left: style_parent.left + group.offset.x,
@@ -1653,6 +1672,7 @@ if ( !AmCharts.translations[ "export" ][ "en" ] ) {
 								var timer = setInterval( function() {
 									if ( images.loaded == images.included ) {
 										clearTimeout( timer );
+										_this.handleBorder( cfg );
 										_this.handleCallback( cfg.afterCapture, cfg );
 										_this.setup.fabric.renderAll();
 										_this.handleCallback( callback, cfg );
@@ -1827,13 +1847,15 @@ if ( !AmCharts.translations[ "export" ][ "en" ] ) {
 			 * Generates SVG image; returns base64 datastring
 			 */
 			toSVG: function( options, callback ) {
+				var clipPaths = [];
 				var cfg = _this.deepMerge( {
-					reviver: function( string ) {
+					reviver: function( string, clipPath ) {
 						var matcher = new RegExp( /\bstyle=(['"])(.*?)\1/ );
 						var match = matcher.exec( string )[ 0 ].slice( 7, -1 );
 						var styles = match.split( ";" );
 						var replacement = [];
 
+						// BEAUTIFY STYLES
 						for ( i1 = 0; i1 < styles.length; i1++ ) {
 							if ( styles[ i1 ] ) {
 								var pair = styles[ i1 ].replace( /\s/g, "" ).split( ":" );
@@ -1856,11 +1878,38 @@ if ( !AmCharts.translations[ "export" ][ "en" ] ) {
 								}
 							}
 						}
+						string = string.replace( match, replacement.join( ";" ) );
 
-						return string.replace( match, replacement.join( ";" ) );
+						// TODO: WAIT UNTIL FABRICJS HANDLES CLIPPATH FOR SVG OUTPUT
+						if ( clipPath ) {
+							var sliceOffset = 2;
+							var end = string.slice( - sliceOffset);
+
+							if ( end != "/>" ) {
+								sliceOffset = 3;
+								end = string.slice( - sliceOffset);
+							}
+
+							var start = string.slice(0,string.length - sliceOffset);
+							var clipPathAttr = " clip-path=\"url(#"+ clipPath.svg.id +")\" ";
+							var clipPathString = new XMLSerializer().serializeToString(clipPath.svg);
+
+							string = start + clipPathAttr + end;
+
+							clipPaths.push(clipPathString);
+						}
+
+						return string;
 					}
 				}, options || {} );
 				var data = _this.setup.fabric.toSVG( cfg, cfg.reviver );
+
+				// TODO: WAIT UNTIL FABRICJS HANDLES CLIPPATH FOR SVG OUTPUT
+				if ( clipPaths.length ) {
+					var start = data.slice(0,data.length-6);
+					var end = data.slice(-6);
+					data = start + clipPaths.join("") + end;
+				}
 
 				if ( cfg.getBase64 ) {
 					data = "data:image/svg+xml;base64," + btoa( data );
@@ -2230,6 +2279,23 @@ if ( !AmCharts.translations[ "export" ][ "en" ] ) {
 						}
 					}
 					callback.apply( _this, data );
+				}
+			},
+
+			/**
+			 * Border handler; injects additional border to canvas
+			 */
+			handleBorder: function( options ) {
+				if ( _this.config.border instanceof Object ) {
+					var cfg = _this.deepMerge( _this.defaults.fabric.border, options.border || {}, true );
+					var border = new fabric.Rect();
+
+					cfg.width = _this.setup.fabric.width - cfg.strokeWidth;
+					cfg.height = _this.setup.fabric.height - cfg.strokeWidth;
+
+					border.set(cfg);
+
+					_this.setup.fabric.add(border);
 				}
 			},
 
@@ -3005,6 +3071,9 @@ if ( !AmCharts.translations[ "export" ][ "en" ] ) {
 
 				// MERGE SETTINGS
 				_this.config.drawing = _this.deepMerge( _this.defaults.fabric.drawing, _this.config.drawing || {}, true );
+				if ( _this.config.border ) {
+					_this.config.border = _this.deepMerge( _this.defaults.fabric.border, _this.config.border || {}, true );
+				}
 				_this.deepMerge( _this.defaults.fabric, _this.config, true );
 				_this.deepMerge( _this.defaults.fabric, _this.config.fabric || {}, true );
 				_this.deepMerge( _this.defaults.pdfMake, _this.config, true );

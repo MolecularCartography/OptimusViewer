@@ -27,6 +27,9 @@ public:
     QString getSampleNameById(const SampleId &id) const;
     int getSampleCount() const;
 
+    FeatureId getFeatureIdByNumber(int number) const;
+    int getFeatureCount() const;
+
 signals:
     void samplesChanged();
 
@@ -37,11 +40,13 @@ private:
     bool setDataSource(const DataSourceId &dataSourceId);
     DataSourceId currentDataSourceId() const;
     void updateSamplesInfo();
+    void updateFeaturesInfo();
 
     static QString getInputFileFilter();
 
     QMap<SampleId, QString> sampleNameById;
     QVector<SampleId> sampleIds;
+    QVector<FeatureId> featureIds;
 
     QSqlDatabase db;
 };

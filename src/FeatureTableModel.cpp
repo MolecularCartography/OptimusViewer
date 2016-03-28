@@ -16,17 +16,7 @@ FeatureTableModel::FeatureTableModel(QObject *parent, FeatureDataSource *dataSou
 
 void FeatureTableModel::updateRowNumber()
 {
-    rowIds.clear();
-
-    QSqlQuery numberOfRowsQuery("SELECT id FROM Feature");
-    while (numberOfRowsQuery.next()) {
-        rowIds.append(numberOfRowsQuery.value(0).value<FeatureId>());
-    }
-    rowNumber = rowIds.size();
-
-    if (rowIds.isEmpty()) {
-        error = numberOfRowsQuery.lastError();
-    }
+    rowNumber = dataSource->getFeatureCount();
 }
 
 void FeatureTableModel::updateColumnNumber()
@@ -107,10 +97,12 @@ QVariant FeatureTableModel::dataInternal(const QModelIndex &index, int role)
         return result;
     }
 
+    const FeatureId rowId = dataSource->getFeatureIdByNumber(index.row());
     if (index.column() < SAMPLE_COLUMNS_OFFSET) {
-        result = getQueryResultValue(consensusFeatureFetcher, QVector<QVariant>() << rowIds[index.row()], index.column());
+        result = getQueryResultValue(consensusFeatureFetcher, QVector<QVariant>() << rowId, index.column());
     } else {
-        result = getQueryResultValue(intensityFetcher, QVector<QVariant>() << rowIds[index.row()] << dataSource->getSampleIdByNumber(index.column() - SAMPLE_COLUMNS_OFFSET), 0);
+        const SampleId columnId = dataSource->getSampleIdByNumber(index.column() - SAMPLE_COLUMNS_OFFSET);
+        result = getQueryResultValue(intensityFetcher, QVector<QVariant>() << rowId << columnId, 0);
     }
     return result.isValid() ? result : TABLE_DEFAULT_VALUE;
 }
