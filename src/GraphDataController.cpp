@@ -210,7 +210,10 @@ QVariantList GraphDataController::getMs2Spectra(const QVariantList &scanTimesByS
 void GraphDataController::samplesChanged()
 {
     currentFeatures.clear();
-    emit updatePlot(QVariantMap());
+    QVariantMap emptyData;
+    emptyData["xic"] = QVariantList();
+    emptyData["isotopicPattern"] = QVariantList();
+    emit updatePlot(emptyData);
 }
 
 } // namespace ov

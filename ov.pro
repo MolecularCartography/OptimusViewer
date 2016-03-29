@@ -9,10 +9,12 @@ HEADERS += src/AppController.h \
            src/GraphDataController.h \
            src/GraphExporter.h \
            src/GraphPoint.h \
+           src/ProgressIndicator.h \
            src/SaveGraphDialog.h
 
 FORMS += src/ui/AppView.ui \
-         src/ui/FeatureTableVisibilityDialog.ui
+         src/ui/FeatureTableVisibilityDialog.ui \
+         src/ui/ProgressIndicator.ui
 
 SOURCES += src/AppController.cpp \
            src/AppView.cpp \
@@ -24,6 +26,7 @@ SOURCES += src/AppController.cpp \
            src/GraphPoint.cpp \
            src/GraphExporter.cpp \
            src/Main.cpp \
+           src/ProgressIndicator.cpp \
            src/SaveGraphDialog.cpp
 
 RESOURCES += ov.qrc

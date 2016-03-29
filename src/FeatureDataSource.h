@@ -25,10 +25,10 @@ public:
 
     SampleId getSampleIdByNumber(int number) const;
     QString getSampleNameById(const SampleId &id) const;
-    int getSampleCount() const;
+    qint64 getSampleCount() const;
 
     FeatureId getFeatureIdByNumber(int number) const;
-    int getFeatureCount() const;
+    qint64 getFeatureCount() const;
 
 signals:
     void samplesChanged();

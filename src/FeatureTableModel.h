@@ -32,15 +32,18 @@ public:
 private:
     void updateRowNumber();
     void updateColumnNumber();
+    void updateFeatureCount();
     QVariant dataInternal(const QModelIndex &index, int role);
-    QVariant getQueryResultValue(QSqlQuery &query, const QVector<QVariant> &parameters, int fieldNumber);
+    static qint64 findFirstQueryRecordIndex(QSqlQuery &query, qint64 startIndex, qint64 endIndex, int fieldNumber, qint64 value);
 
-    int rowNumber;
-    int columnNumber;
+    qint64 rowNumber;
+    qint64 columnNumber;
     FeatureDataSource *dataSource;
 
     QSqlQuery consensusFeatureFetcher;
     QSqlQuery intensityFetcher;
+    QMap<FeatureId, qint64> featureObservationCount;
+    qint64 totalFeatureObservationCount;
 
     QSqlError error;
 };

@@ -208,7 +208,7 @@ QString FeatureDataSource::getSampleNameById(const SampleId &id) const
     }
 }
 
-int FeatureDataSource::getSampleCount() const
+qint64 FeatureDataSource::getSampleCount() const
 {
     return sampleIds.size();
 }
@@ -223,7 +223,7 @@ FeatureId FeatureDataSource::getFeatureIdByNumber(int number) const
     }
 }
 
-int FeatureDataSource::getFeatureCount() const
+qint64 FeatureDataSource::getFeatureCount() const
 {
     return featureIds.size();
 }

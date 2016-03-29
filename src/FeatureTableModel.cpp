@@ -9,7 +9,8 @@ const QVariant TABLE_DEFAULT_VALUE = QVariant("0");
 namespace ov {
 
 FeatureTableModel::FeatureTableModel(QObject *parent, FeatureDataSource *dataSource)
-    : QAbstractTableModel(parent), rowNumber(DEFAULT_TABLE_SIZE), columnNumber(DEFAULT_TABLE_SIZE), dataSource(dataSource)
+    : QAbstractTableModel(parent), rowNumber(DEFAULT_TABLE_SIZE), columnNumber(DEFAULT_TABLE_SIZE), dataSource(dataSource),
+    totalFeatureObservationCount(0)
 {
 
 }
@@ -24,17 +25,30 @@ void FeatureTableModel::updateColumnNumber()
     columnNumber = SAMPLE_COLUMNS_OFFSET + dataSource->getSampleCount();
 }
 
+void FeatureTableModel::updateFeatureCount()
+{
+    featureObservationCount.clear();
+    totalFeatureObservationCount = 0;
+
+    QSqlQuery sampleFeatureCountQuery("SELECT feature_id, COUNT(*) FROM SampleFeature WHERE feature_id IN "
+        "(SELECT DISTINCT feature_id FROM SampleFeature) GROUP BY feature_id");
+    while (sampleFeatureCountQuery.next()) {
+        const qint64 featureCount = sampleFeatureCountQuery.value(1).toLongLong();
+        featureObservationCount[sampleFeatureCountQuery.value(0).value<FeatureId>()] = featureCount;
+        totalFeatureObservationCount += featureCount;
+    }
+}
+
 void FeatureTableModel::reset()
 {
     beginResetModel();
 
     updateRowNumber();
     updateColumnNumber();
+    updateFeatureCount();
 
-    consensusFeatureFetcher = QSqlQuery();
-    consensusFeatureFetcher.prepare("SELECT id, consensus_mz, consensus_rt, consensus_charge FROM Feature WHERE id = ?");
-    intensityFetcher = QSqlQuery();
-    intensityFetcher.prepare("SELECT intensity FROM SampleFeature WHERE feature_id = ? AND sample_id = ?");
+    consensusFeatureFetcher = QSqlQuery("SELECT id, consensus_mz, consensus_rt, consensus_charge FROM Feature ORDER BY consensus_mz");
+    intensityFetcher = QSqlQuery("SELECT feature_id, sample_id, intensity FROM SampleFeature ORDER BY feature_id, sample_id");
 
     endResetModel();
 }
@@ -64,24 +78,27 @@ SampleId FeatureTableModel::getSampleIdByColumnNumber(int column) const
     }
 }
 
-QVariant FeatureTableModel::getQueryResultValue(QSqlQuery &query, const QVector<QVariant> &parameters, int fieldNumber)
+qint64 FeatureTableModel::findFirstQueryRecordIndex(QSqlQuery &query, qint64 startIndex, qint64 endIndex, int fieldNumber, qint64 value)
 {
-    QVariant result;
+    qint64 left = startIndex;
+    qint64 right = endIndex;
 
-    foreach (const QVariant &parameter, parameters) {
-        query.addBindValue(parameter);
+    while (right - left > 1) {
+        qint64 middle = left + (right - left) / 2;
+        query.seek(middle);
+        if (query.value(fieldNumber).toLongLong() < value) {
+            left = middle;
+        } else {
+            right = middle;
+        }
     }
-
-    if (!query.exec()) {
-        error = query.lastError();
-        printf(error.text().toLocal8Bit().data());
-        return result;
+    query.seek(left);
+    if (query.value(fieldNumber).toLongLong() == value) {
+        return left;
+    } else {
+        query.seek(right);
+        return right;
     }
-    if (query.next()) {
-        result = query.value(fieldNumber);
-    }
-    query.finish();
-    return result;
 }
 
 QVariant FeatureTableModel::data(const QModelIndex &index, int role) const
@@ -97,14 +114,24 @@ QVariant FeatureTableModel::dataInternal(const QModelIndex &index, int role)
         return result;
     }
 
-    const FeatureId rowId = dataSource->getFeatureIdByNumber(index.row());
     if (index.column() < SAMPLE_COLUMNS_OFFSET) {
-        result = getQueryResultValue(consensusFeatureFetcher, QVector<QVariant>() << rowId, index.column());
+        consensusFeatureFetcher.seek(index.row());
+        result = consensusFeatureFetcher.value(index.column());
     } else {
+        const FeatureId rowId = dataSource->getFeatureIdByNumber(index.row());
         const SampleId columnId = dataSource->getSampleIdByNumber(index.column() - SAMPLE_COLUMNS_OFFSET);
-        result = getQueryResultValue(intensityFetcher, QVector<QVariant>() << rowId << columnId, 0);
+
+        const qint64 firstFeatureRecord = findFirstQueryRecordIndex(intensityFetcher, 0, totalFeatureObservationCount - 1, 0, rowId);
+        if (intensityFetcher.value(0).value<FeatureId>() != rowId) {
+            result = TABLE_DEFAULT_VALUE;
+        } else {
+            const qint64 endRecordIndex = firstFeatureRecord + featureObservationCount[rowId] - 1;
+            const qint64 targetFeatureRecord = findFirstQueryRecordIndex(intensityFetcher, firstFeatureRecord, endRecordIndex, 1, columnId);
+
+            result = intensityFetcher.value(1).value<SampleId>() == columnId ? intensityFetcher.value(2) : TABLE_DEFAULT_VALUE;
+        }
     }
-    return result.isValid() ? result : TABLE_DEFAULT_VALUE;
+    return result;
 }
 
 QVariant FeatureTableModel::headerData(int section, Qt::Orientation orientation, int role) const
