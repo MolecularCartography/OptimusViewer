@@ -34,6 +34,7 @@ signals:
     void open();
     void exit();
     void about();
+    void exportToCsv();
 
     void graphViewAboutToLoad(QWebView *view);
     void featureSelectionChanged(const QMultiHash<SampleId, FeatureId> &newSelection, const QMap<FeatureId, qreal> &featureMzs);

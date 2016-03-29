@@ -43,6 +43,8 @@ AppView::~AppView()
 
 void AppView::initActions()
 {
+    ui->actionExportToCsv->setEnabled(false);
+
     hideColumnAction = new QAction(tr("Hide this column"), this);
     connect(hideColumnAction, &QAction::triggered, this, &AppView::hideColumnTriggered);
 
@@ -84,6 +86,7 @@ void AppView::connectGuiSignals()
     connect(ui->actionAbout, &QAction::triggered, this, &AppView::about);
     connect(ui->actionExit, &QAction::triggered, this, &AppView::exit);
     connect(ui->actionOpen, &QAction::triggered, this, &AppView::open);
+    connect(ui->actionExportToCsv, &QAction::triggered, this, &AppView::exportToCsv);
 }
 
 void AppView::featureTableSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected)
@@ -195,6 +198,8 @@ void AppView::samplesChanged()
         for (int column = 1; column < model->columnCount(); ++column) {
             ui->featureTableView->resizeColumnToContents(column);
         }
+
+        ui->actionExportToCsv->setEnabled(true);
     }
 }
 

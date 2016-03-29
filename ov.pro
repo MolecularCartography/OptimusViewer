@@ -2,7 +2,9 @@ include (ov.pri)
 
 HEADERS += src/AppController.h \
            src/AppView.h \
+           src/CsvWritingUtils.h \
            src/FeatureDataSource.h \
+           src/FeatureTableExporter.h \
            src/FeatureTableModel.h \
            src/FeatureTableVisibilityDialog.h \
            src/Globals.h \
@@ -18,7 +20,9 @@ FORMS += src/ui/AppView.ui \
 
 SOURCES += src/AppController.cpp \
            src/AppView.cpp \
+           src/CsvWritingUtils.cpp \
            src/FeatureDataSource.cpp \
+           src/FeatureTableExporter.cpp \
            src/FeatureTableModel.cpp \
            src/FeatureTableVisibilityDialog.cpp \
            src/Globals.cpp \

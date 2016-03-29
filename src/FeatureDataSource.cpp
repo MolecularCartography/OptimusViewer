@@ -176,7 +176,7 @@ QList<GraphPoint> FeatureDataSource::getMs2ScanData(const QMultiHash<SampleId, F
 
 void FeatureDataSource::selectDataSource()
 {
-    DataSourceId dataSourceId = QFileDialog::getOpenFileName(QApplication::activeWindow(), QObject::tr("Open file"), QString(), getInputFileFilter());
+    DataSourceId dataSourceId = QFileDialog::getOpenFileName(QApplication::activeWindow(), QObject::tr("Open File"), QString(), getInputFileFilter());
     if (dataSourceId.isEmpty()) {
         return;
     } else if (!setDataSource(dataSourceId)) {

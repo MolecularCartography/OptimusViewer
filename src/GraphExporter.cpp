@@ -7,6 +7,7 @@
 #include <QWebPage>
 #include <QWebView>
 
+#include "CsvWritingUtils.h"
 #include "SaveGraphDialog.h"
 
 #include "GraphExporter.h"
@@ -25,22 +26,6 @@ QVariantList toVariantList(const QList<T> &l)
     QVariantList result;
     foreach(const T &i, l) {
         result.append(i);
-    }
-    return result;
-}
-
-QList<QStringList> createStringTable(int nRows, int nColumns)
-{
-    Q_ASSERT(nRows > 0 && nColumns > 0);
-    QList<QStringList> result;
-    result.reserve(nRows);
-    for (int i = 0; i < nRows; ++i) {
-        QStringList row;
-        row.reserve(nColumns);
-        for (int j = 0; j < nColumns; ++j) {
-            row.append(QString());
-        }
-        result.append(row);
     }
     return result;
 }
@@ -153,67 +138,58 @@ void GraphExporter::saveGraphAsCsv(const GraphId &id, const QString &path, const
         return;
     }
 
-    QFile file(path);
-    if (file.open(QFile::WriteOnly | QFile::Truncate)) {
-        int numberOfNextValueColumn = 1;
-        QString xFieldColumnName;
-        if (id == GraphIds::XIC_ID) {
-            xFieldColumnName = "RT";
-        } else if (id == GraphIds::MASS_PEAK_ID) {
-            xFieldColumnName = "mz";
-        } else {
-            Q_ASSERT(false);
-        }
-        QMap<QString, int> columnNumberByName;
-        foreach (const QVariant &varPoint, graphPoints) {
-            const QVariantMap mapPoint = varPoint.toMap();
-            const QString yField = mapPoint["y"].toString();
-
-            if (!columnNumberByName.contains(yField)) {
-                columnNumberByName[yField] = numberOfNextValueColumn++;
-            }
-        }
-
-        QList<QStringList> resultTable = createStringTable(graphPoints.length() + 1, numberOfNextValueColumn);
-        resultTable[0][0] = xFieldColumnName;
-        for (int i = 1; i < numberOfNextValueColumn; ++i) {
-            QString columnName = columnNumberByName.key(i);
-            if (columnName.contains(",")) {
-                columnName = QString("\"%1\"").arg(columnName); // escape commas
-            }
-            resultTable[0][i] = columnName;
-        }
-        QMap<QString, int> rowNumberByXValue;
-        int currentRow = 0;
-        foreach (const QVariant &varPoint, graphPoints) {
-            const QVariantMap mapPoint = varPoint.toMap();
-            const QString xField = mapPoint["x"].toString();
-            const QString yField = mapPoint["y"].toString();
-            const int columnNumber = columnNumberByName[yField];
-
-            const QString xValue = mapPoint[xField].toString();
-
-            int row = -1;
-            if (!rowNumberByXValue.contains(xValue)) {
-                rowNumberByXValue[xValue] = ++currentRow;
-                row = currentRow;
-                resultTable[row][0] = xValue;
-            } else {
-                row = rowNumberByXValue[xValue];
-            }
-            Q_ASSERT(-1 != row);
-            resultTable[row][columnNumber] = mapPoint[yField].toString();
-        }
-
-        QStringList csvRows;
-        foreach (const QStringList &row, resultTable) {
-            csvRows.append(row.join(","));
-        }
-
-        QTextStream output(&file);
-        output << csvRows.join("\n");
+    int numberOfNextValueColumn = 1;
+    QString xFieldColumnName;
+    if (id == GraphIds::XIC_ID) {
+        xFieldColumnName = "RT";
+    } else if (id == GraphIds::MASS_PEAK_ID) {
+        xFieldColumnName = "m/z";
     } else {
-        QMessageBox::critical(QApplication::activeWindow(), tr("Error"), file.errorString());
+        Q_ASSERT(false);
+    }
+    QMap<QString, int> columnNumberByName;
+    foreach (const QVariant &varPoint, graphPoints) {
+        const QVariantMap mapPoint = varPoint.toMap();
+        const QString yField = mapPoint["y"].toString();
+
+        if (!columnNumberByName.contains(yField)) {
+            columnNumberByName[yField] = numberOfNextValueColumn++;
+        }
+    }
+
+    QList<QStringList> resultTable = CsvWritingUtils::createEmptyTable(graphPoints.length() + 1, numberOfNextValueColumn);
+    resultTable[0][0] = xFieldColumnName;
+    for (int i = 1; i < numberOfNextValueColumn; ++i) {
+        QString columnName = columnNumberByName.key(i);
+        if (columnName.contains(",")) {
+            columnName = QString("\"%1\"").arg(columnName); // escape commas
+        }
+        resultTable[0][i] = columnName;
+    }
+    QMap<QString, int> rowNumberByXValue;
+    int currentRow = 0;
+    foreach (const QVariant &varPoint, graphPoints) {
+        const QVariantMap mapPoint = varPoint.toMap();
+        const QString xField = mapPoint["x"].toString();
+        const QString yField = mapPoint["y"].toString();
+        const int columnNumber = columnNumberByName[yField];
+
+        const QString xValue = mapPoint[xField].toString();
+
+        int row = -1;
+        if (!rowNumberByXValue.contains(xValue)) {
+            rowNumberByXValue[xValue] = ++currentRow;
+            row = currentRow;
+            resultTable[row][0] = xValue;
+        } else {
+            row = rowNumberByXValue[xValue];
+        }
+        Q_ASSERT(-1 != row);
+        resultTable[row][columnNumber] = mapPoint[yField].toString();
+    }
+
+    if (!CsvWritingUtils::saveTableToFile(resultTable, path)) {
+        QMessageBox::critical(QApplication::activeWindow(), tr("Error"), tr("Unable to save file: %1").arg(path));
     }
 }
 

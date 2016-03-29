@@ -83,6 +83,7 @@
      <string>File</string>
     </property>
     <addaction name="actionOpen"/>
+    <addaction name="actionExportToCsv"/>
     <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
@@ -121,6 +122,11 @@
   <action name="actionAbout">
    <property name="text">
     <string>About</string>
+   </property>
+  </action>
+  <action name="actionExportToCsv">
+   <property name="text">
+    <string>Export to CSV...</string>
    </property>
   </action>
  </widget>

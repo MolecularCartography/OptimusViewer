@@ -3,6 +3,8 @@
 
 #include "FeatureDataSource.h"
 #include "AppView.h"
+#include "FeatureTableExporter.h"
+#include "FeatureTableModel.h"
 #include "GraphDataController.h"
 #include "GraphExporter.h"
 
@@ -29,9 +31,11 @@ private:
 
     static bool staticInitializationDone;
     FeatureDataSource dataSource;
+    FeatureTableModel featureModel;
     AppView view;
     GraphDataController xicDataController;
     GraphExporter graphExporter;
+    FeatureTableExporter featureTableExporter;
 };
 
 } // namespace ov

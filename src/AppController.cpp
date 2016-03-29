@@ -3,8 +3,6 @@
 #include <QWebSettings>
 #include <QWebView>
 
-#include "FeatureTableModel.h"
-
 #include "AppController.h"
 
 namespace ov {
@@ -12,12 +10,12 @@ namespace ov {
 bool AppController::staticInitializationDone = false;
 
 AppController::AppController()
-    : xicDataController(&dataSource)
+    : featureModel(NULL, &dataSource), xicDataController(&dataSource), featureTableExporter(featureModel)
 {
     initStatic();
     connectSingals();
 
-    view.initViews(new FeatureTableModel(this, &dataSource));
+    view.initViews(&featureModel);
     view.show();
 }
 
@@ -50,6 +48,7 @@ void AppController::setWebSettings()
 void AppController::connectSingals()
 {
     connect(&view, &AppView::open, &dataSource, &FeatureDataSource::selectDataSource);
+    connect(&view, &AppView::exportToCsv, &featureTableExporter, &FeatureTableExporter::exportFeatures);
     connect(&view, &AppView::about, &QApplication::aboutQt);
     connect(&view, &AppView::exit, &QCoreApplication::quit);
     connect(&view, &AppView::graphViewAboutToLoad, this, &AppController::graphViewAboutToLoad);
