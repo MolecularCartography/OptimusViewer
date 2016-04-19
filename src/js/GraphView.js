@@ -147,7 +147,7 @@ function getXicGraphProto(baloonMsg) {
         'bulletBorderAlpha': 1,
         'colorField': 'color',
         'bulletSizeField': 'bulletSize',
-        'fillAlphas': 1,
+        'fillAlphas': 0.7,
         'hideBulletsCount': 1000,
     };
 }
@@ -359,8 +359,8 @@ var xicGraphSelectionState = {
                     'fillAlphas': event.chart.graphs[i]['fillAlphas'],
                     'lineAlpha': event.chart.graphs[i]['lineAlpha']
                 });
-                event.chart.graphs[i].fillAlphas = 0.1;
-                event.chart.graphs[i].lineAlpha = 0.1;
+                event.chart.graphs[i].fillAlphas = 0.3;
+                event.chart.graphs[i].lineAlpha = 0.3;
             }
 
             this._selectionActive = true;
@@ -417,7 +417,7 @@ var xicGraphSelectionState = {
 function createXicChart(div_id, dataProvider, graphs) {
     return AmCharts.makeChart(div_id, {
         'type': 'xy',
-        'theme': 'patterns',
+        'theme': 'light',
         'autoMarginOffset': 20,
         'startDuration': 0.1,
         'dataProvider': dataProvider,

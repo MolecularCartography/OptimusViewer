@@ -33,6 +33,9 @@ private:
     void updateRowNumber();
     void updateColumnNumber();
     void updateFeatureCount();
+    void invalidateCache();
+    void cacheValue(int row, int column, const QVariant &val);
+    QVariant getCachedValue(int row, int column) const;
     QVariant dataInternal(const QModelIndex &index, int role);
     static qint64 findFirstQueryRecordIndex(QSqlQuery &query, qint64 startIndex, qint64 endIndex, int fieldNumber, qint64 value);
 
@@ -44,6 +47,7 @@ private:
     QSqlQuery intensityFetcher;
     QMap<FeatureId, qint64> featureObservationCount;
     qint64 totalFeatureObservationCount;
+    QVector<QVariant> cachedCells;
 
     QSqlError error;
 };

@@ -39,6 +39,11 @@ void FeatureTableModel::updateFeatureCount()
     }
 }
 
+void FeatureTableModel::invalidateCache()
+{
+    cachedCells = QVector<QVariant>(rowNumber * columnNumber);
+}
+
 void FeatureTableModel::reset()
 {
     beginResetModel();
@@ -46,6 +51,7 @@ void FeatureTableModel::reset()
     updateRowNumber();
     updateColumnNumber();
     updateFeatureCount();
+    invalidateCache();
 
     consensusFeatureFetcher = QSqlQuery("SELECT id, consensus_mz, consensus_rt, consensus_charge FROM Feature ORDER BY consensus_mz");
     intensityFetcher = QSqlQuery("SELECT feature_id, sample_id, intensity FROM SampleFeature ORDER BY feature_id, sample_id");
@@ -106,20 +112,37 @@ QVariant FeatureTableModel::data(const QModelIndex &index, int role) const
     return const_cast<FeatureTableModel *>(this)->dataInternal(index, role);
 }
 
+void FeatureTableModel::cacheValue(int row, int column, const QVariant &val)
+{
+    cachedCells[row * columnNumber + column] = val;
+}
+
+QVariant FeatureTableModel::getCachedValue(int row, int column) const
+{
+    return cachedCells[row * columnNumber + column];
+}
+
 QVariant FeatureTableModel::dataInternal(const QModelIndex &index, int role)
 {
     QVariant result;
+    const int row = index.row();
+    const int column = index.column();
 
-    if (!index.isValid() || (role & ~Qt::DisplayRole) || index.row() >= rowNumber || index.column() >= columnNumber) {
+    if (!index.isValid() || (role & ~Qt::DisplayRole) || row >= rowNumber || column >= columnNumber) {
         return result;
     }
 
-    if (index.column() < SAMPLE_COLUMNS_OFFSET) {
-        consensusFeatureFetcher.seek(index.row());
-        result = consensusFeatureFetcher.value(index.column());
+    const QVariant cachedVal = getCachedValue(row, column);
+    if (cachedVal.isValid()) {
+        return cachedVal;
+    }
+
+    if (column < SAMPLE_COLUMNS_OFFSET) {
+        consensusFeatureFetcher.seek(row);
+        result = consensusFeatureFetcher.value(column);
     } else {
-        const FeatureId rowId = dataSource->getFeatureIdByNumber(index.row());
-        const SampleId columnId = dataSource->getSampleIdByNumber(index.column() - SAMPLE_COLUMNS_OFFSET);
+        const FeatureId rowId = dataSource->getFeatureIdByNumber(row);
+        const SampleId columnId = dataSource->getSampleIdByNumber(column - SAMPLE_COLUMNS_OFFSET);
 
         const qint64 firstFeatureRecord = findFirstQueryRecordIndex(intensityFetcher, 0, totalFeatureObservationCount - 1, 0, rowId);
         if (intensityFetcher.value(0).value<FeatureId>() != rowId) {
@@ -131,6 +154,7 @@ QVariant FeatureTableModel::dataInternal(const QModelIndex &index, int role)
             result = intensityFetcher.value(1).value<SampleId>() == columnId ? intensityFetcher.value(2) : TABLE_DEFAULT_VALUE;
         }
     }
+    cacheValue(row, column, result);
     return result;
 }
 
