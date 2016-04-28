@@ -12,6 +12,14 @@ body {
     font-size: 11px;
 }
 
+#chart_container {
+    width: 100%;
+    height: 90%;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
 #splitter {
     height: 100%;
     width: 99%;
@@ -19,7 +27,13 @@ body {
     position: absolute !important;
 }
 
-a
-{
+#legend {
+    width: 100%;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+}
+
+a {
     outline: none;
 }

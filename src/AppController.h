@@ -33,7 +33,7 @@ private:
     FeatureDataSource dataSource;
     FeatureTableModel featureModel;
     AppView view;
-    GraphDataController xicDataController;
+    GraphDataController graphDataController;
     GraphExporter graphExporter;
     FeatureTableExporter featureTableExporter;
 };

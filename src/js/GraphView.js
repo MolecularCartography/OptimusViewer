@@ -1,24 +1,13 @@
-var xicChart = null;
-var xicGraphId = graphExporter.xicGraphId;
-
-var massPeakChart = null;
-var massPeakGraphId = graphExporter.massPeakGraphId;
-
-var lastPlotData = {};
+var chartsById = {};
+chartsById[graphExporter.xicGraphId] = null;
+chartsById[graphExporter.massPeakGraphId] = null;
 
 var imageFormats = graphExporter.supportedImageFormatIds;
 var dataFormats = graphExporter.supportedDataFormatIds;
 
-var fakePointKey = "fake_data";
+var auxPointFlag = "aux_data";
 
-function getChartById(id) {
-    switch (id) {
-        case xicGraphId:
-            return xicChart;
-        case massPeakGraphId:
-            return massPeakChart;
-    }
-}
+var actualPlotData = {};
 
 function clone(obj) {
     if (null == obj || 'object' != typeof obj) return obj;
@@ -27,14 +16,6 @@ function clone(obj) {
         copy[attr] = obj[attr];
     }
     return copy;
-}
-
-function isEmpty(obj) {
-    for(var prop in obj) {
-        if(obj.hasOwnProperty(prop))
-            return false;
-    }
-    return true && JSON.stringify(obj) === JSON.stringify({});
 }
 
 function getCoordinates(chart) {
@@ -50,7 +31,7 @@ function getCoordinates(chart) {
     for (var i = 0; i < chart.dataProvider.length; ++i) {
         var originalPoint = chart.dataProvider[i];
         var resultPoint = {};
-        if (fakePointKey in originalPoint) {
+        if (auxPointFlag in originalPoint) {
             continue;
         }
         for (var key in originalPoint) {
@@ -64,8 +45,8 @@ function getCoordinates(chart) {
                 if (yFieldName.substr(yFieldName.length - delimeter.length) == delimeter) {
                     yFieldName = yFieldName.slice(0, -delimeter.length);
                 }
-                if ('precursorMz' in originalPoint) {
-                    yFieldName = ('Precursor mz: ' + originalPoint['precursorMz'].toString()).concat(delimeter, yFieldName);
+                if (dataController.precursorMzKey in originalPoint) {
+                    yFieldName = ('Precursor m/z: ' + originalPoint[dataController.precursorMzKey].toString()).concat(delimeter, yFieldName);
                 }
                 resultPoint['y'] = yFieldName;
                 resultPoint[yFieldName] = originalPoint[key];
@@ -83,7 +64,7 @@ function generateFormatListMenu(graphId, formats) {
         var menuItem = {
             'label': formatId,
             'click': function (event, menuItem) {
-                var chart = getChartById(graphId);
+                var chart = chartsById[graphId];
 
                 // seems that chart.chartCursor.enabled property doesn't work so we play with alpha of cursor
                 // TODO: check the property with future versions of amCharts
@@ -140,7 +121,7 @@ Number.prototype.round = function (places) {
     return +(Math.round(this + 'e+' + places) + 'e-' + places);
 }
 
-function getXicGraphProto(baloonMsg) {
+function generateXicGraphProto() {
     return {
         'balloonFunction': adjustXicBalloonText,
         'bulletField': 'bullet',
@@ -148,18 +129,18 @@ function getXicGraphProto(baloonMsg) {
         'colorField': 'color',
         'bulletSizeField': 'bulletSize',
         'fillAlphas': 0.7,
-        'hideBulletsCount': 1000,
+        'hideBulletsCount': 1000
     };
 }
 
 function adjustXicBalloonText(graphDataItem, graph) {
-    var hasPrecursorMz = 'precursorMz' in graph.chart.dataProvider[graphDataItem.index];
-    return graph.yField
-        + (hasPrecursorMz ? ('Precursor mz: ' + graph.chart.dataProvider[graphDataItem.index]['precursorMz'].round(4) + '<br>(Click to see MS/MS spectrum)<br>') : '')
-        + '<b><span style="font-size:14px;">RT:' + graphDataItem.values.x.round(2) + ' s</span></b>';
+    var hasPrecursorMz = dataController.precursorMzKey in graph.chart.dataProvider[graphDataItem.index];
+    return (hasPrecursorMz ? ('Precursor m/z: ' + graph.chart.dataProvider[graphDataItem.index][dataController.precursorMzKey].round(4)
+        + '<br>(Click to see MS/MS spectrum)<br>') : '')
+        + '<b><span style="font-size:14px;">Scan start time:' + graphDataItem.values.x.round(2) + ' s</span></b>';
 }
 
-function getIsotopicPatternGraphProto(baloonMsg) {
+function generateMassGraphProto() {
     return {
         'balloonFunction': adjustMassPeakBalloonText,
         'lineAlpha': 1,
@@ -168,113 +149,90 @@ function getIsotopicPatternGraphProto(baloonMsg) {
         'bulletSizeField': 'bulletSize',
         'bulletBorderAlpha': 1,
         'useLineColorForBulletBorder': true,
-        'hideBulletsCount': 1000,
+        'hideBulletsCount': 1000
     };
 }
 
 function adjustMassPeakBalloonText(graphDataItem, graph) {
-    var hasScanStartTime = 'scanStartTime' in graph.chart.dataProvider[graphDataItem.index];
-    var hasPrecursorMz = 'precursorMz' in graph.chart.dataProvider[graphDataItem.index];
-    return graph.yField
-        + (hasPrecursorMz ? ('Precursor mz: ' + graph.chart.dataProvider[graphDataItem.index]['precursorMz'].round(4) + '<br>') : '')
-        + (hasScanStartTime ? ('Scan start time: ' + graph.chart.dataProvider[graphDataItem.index]['scanStartTime'].round(2) + ' s<br>') : '')
-        + '<b><span style="font-size:14px;">mz:' + graphDataItem.values.x.round(4) + '</span></b>';
+    return '<b><span style="font-size:14px;">m/z:' + graphDataItem.values.x.round(4) + '</span></b>';
 }
 
-function getGraphs(data, horAxisDataId, graphProtoBuilder) {
+function xicPointAttributeSetter(point) {
+    if (dataController.precursorMzKey in point) {
+        point['bullet'] = 'round';
+        point['color'] = '#B22222';
+        point['bulletSize'] = 10;
+        point[auxPointFlag] = true;
+    }
+}
+
+function massPointAttributeSetter(point) {
+    point['bullet'] = 'round';
+    point['bulletSize'] = 0.5;
+}
+
+function createAuxGroundPoint(point, valueAxisKey, categoryAxisKey, categoryOffset) {
+    var auxPoint = clone(point);
+    auxPoint[categoryAxisKey] += categoryOffset;
+    auxPoint[valueAxisKey] = 0.0;
+    auxPoint[auxPointFlag] = true;
+    return auxPoint;
+}
+
+function isAuxPoint(point) {
+    return auxPointFlag in point;
+}
+
+function getGraphs(graphDescriptors, points, graphProtoGenerator, horizontalOffset, stickPlot, pointAttributeSetter) {
     var graphs = [];
-    var usedKeys = {};
-    var rightMostIndexes = {};
-    var orderOfRightBoundaries = [];
-    for (var i = 0; i < data.length; ++i) {
-        for (var xKey in data[i]) {
-            if (xKey.slice(0, horAxisDataId.length) != horAxisDataId) {
-                continue;
-            }
-            var yKey;
-            for (var key in data[i]) {
-                if (key != xKey && key.indexOf('Sample:') > -1) { // TODO: refactor
-                    yKey = key;
-                    break;
-                }
-            }
-            var firstGraphPoint = false;
-            if (!(xKey in usedKeys)) {
-                var currentGraph = graphProtoBuilder(yKey);
-                currentGraph['xField'] = xKey;
-                currentGraph['yField'] = yKey;
-                usedKeys[xKey] = null;
-                graphs.push(currentGraph);
-                firstGraphPoint = true;
-            }
 
-            if (horAxisDataId == 'rt_') { // TODO: refactor
-                if ('precursorMz' in data[i]) {
-                    data[i]['bullet'] = 'round';
-                    data[i]['color'] = '#B22222';
-                    data[i]['bulletSize'] = 10;
-                    data[i][fakePointKey] = true;
-                } else {
-                    data[i]['bullet'] = 'round';
-                    data[i]['color'] = '#A8A8A8';
-                    data[i]['bulletSize'] = 0.5;
-                }
-                if (firstGraphPoint) {
-                    var boundaryPoint = clone(data[i]);
-                    delete boundaryPoint['bullet'];
-                    boundaryPoint[yKey] = 0.0;
-                    boundaryPoint[fakePointKey] = true;
-                    data.splice(i++, 0, boundaryPoint);
-                } else {
-                    rightMostIndexes[xKey] = {
-                        index: i,
-                        yAxis: yKey
-                    };
-                }
-            }
-
-            if (horAxisDataId == 'mz_') { // TODO: refactor
-                var precedingPoint = clone(data[i]);
-                precedingPoint[yKey] = 0.0;
-                precedingPoint[fakePointKey] = true;
-
-                var successivePoint = clone(data[i]);
-                successivePoint[yKey] = 0.0;
-                successivePoint[fakePointKey] = true;
-
-                data[i]['bullet'] = 'round';
-                data[i]['bulletSize'] = 0.5;
-
-                delete precedingPoint['bullet'];
-                delete successivePoint['bullet'];
-                data.splice(i++, 0, precedingPoint);
-                data.splice(++i, 0, successivePoint);
-            }
-        }
+    if (!graphDescriptors || !points) {
+        return graphs;
     }
 
-    if (horAxisDataId == 'rt_') { // TODO: refactor
-        var xicPointsDescending = [];
-        var usedGraphIds = {};
-        while (Object.keys(usedGraphIds).length != Object.keys(rightMostIndexes).length) {
-            var curMaxIndex = 0;
-            for (var graphId in rightMostIndexes) {
-                if (rightMostIndexes[graphId].index > curMaxIndex && !(graphId in usedGraphIds)) {
-                    xicPointsDescending[Object.keys(usedGraphIds).length] = graphId;
-                    curMaxIndex = rightMostIndexes[graphId].index;
-                }
-            }
-            usedGraphIds[xicPointsDescending[xicPointsDescending.length - 1]] = null;
+    var lastGraphId = null;
+    for (var i = 0; i < points.length; ++i) {
+        var curPoint = points[i];
+        var curGraphId = curPoint[dataController.graphIdKey];
+        var curGraphDescriptor = graphDescriptors[curGraphId];
+
+        if (isAuxPoint(curPoint)) {
+            continue;
         }
 
-        for (var i = 0; i < xicPointsDescending.length; ++i) {
-            var pointAttrs = rightMostIndexes[xicPointsDescending[i]];
-            var boundaryPoint = clone(data[pointAttrs.index]);
-            boundaryPoint[pointAttrs.yAxis] = 0.0;
-            boundaryPoint[fakePointKey] = true;
-            delete boundaryPoint['bullet'];
-            data.splice(pointAttrs.index + 1, 0, boundaryPoint);
+        // add auxilary ground points at ends of current graph
+        var addAuxBefore = stickPlot || curGraphId !== lastGraphId;
+        var addAuxAfter = stickPlot || i === points.length - 1;
+
+        var addOffsetBefore = horizontalOffset > 0 && curGraphId !== lastGraphId;
+        var addOffsetAfter = horizontalOffset > 0 && i === points.length - 1;
+
+        if (curGraphId !== lastGraphId) {
+            var currentGraph = graphProtoGenerator();
+            currentGraph['xField'] = curGraphDescriptor[dataController.xFieldKey];
+            currentGraph['yField'] = curGraphDescriptor[dataController.yFieldKey];
+            currentGraph['title'] = 'Sample: ' + curGraphDescriptor[dataController.sampleNameGraphKey] + '<br>Consensus m/z: '
+                + curGraphDescriptor[dataController.consensusMzGraphKey].round(4);
+            currentGraph['id'] = curGraphId;
+            graphs.push(currentGraph);
+            lastGraphId = curGraphId;
         }
+
+        var xField = curGraphDescriptor[dataController.xFieldKey];
+        var yField = curGraphDescriptor[dataController.yFieldKey];
+        if (addOffsetBefore) {
+            points.splice(i++, 0, createAuxGroundPoint(curPoint, yField, xField, -horizontalOffset));
+        }
+        if (addAuxBefore && (i === 0 || !(isAuxPoint(points[i - 1]) && points[i - 1][xField] === curPoint[xField]))) {
+            points.splice(i++, 0, createAuxGroundPoint(curPoint, yField, xField, 0));
+        }
+        if (addAuxAfter && (i === points.length - 1 || !(isAuxPoint(points[i + 1]) && points[i + 1][xField] === curPoint[xField]))) {
+            points.splice(++i, 0, createAuxGroundPoint(curPoint, yField, xField, 0));
+        }
+        if (addOffsetAfter) {
+            points.splice(++i, 0, createAuxGroundPoint(curPoint, yField, xField, horizontalOffset));
+        }
+        pointAttributeSetter(curPoint);
     }
     return graphs;
 }
@@ -308,10 +266,9 @@ var xicGraphSelectionState = {
                 this._selectedCharts[i].validateData();
             }
             this._selectedCharts = [];
-
             this._selectionActive = false;
 
-            updateMassPeakChartData(lastPlotData['isotopicPattern']);
+            updateMassChartData(actualPlotData[dataController.ms1GraphDescKey], actualPlotData[dataController.ms1GraphDataKey]);
         }
     },
 
@@ -321,7 +278,7 @@ var xicGraphSelectionState = {
         if (!event.event.ctrlKey) {
             this.deselect(event.event);
         }
-        var isMs2ScanClicked = 'precursorMz' in event.graph.chart.dataProvider[event.item.index];
+        var isMs2ScanClicked = dataController.precursorMzKey in event.graph.chart.dataProvider[event.item.index];
         if (!isMs2ScanClicked) {
             return;
         }
@@ -373,48 +330,58 @@ var xicGraphSelectionState = {
     },
 
     _updateMs2Spectra: function() {
-        var scanTimesByScanKey = {};
-        for (var i = 0; i < this._selectedItems.length; ++i) {
-            var selectedItem = this._selectedItems[i];
-            var scanKey = '';
-            for (var key in selectedItem.item.dataContext) {
-                if (key.indexOf('rt_') > -1) { // TODO: refactor
-                    scanKey = key;
-                    break;
-                }
-            }
-
-            if (!(scanKey in scanTimesByScanKey)) {
-                var intKey = '';
-                for (var key in selectedItem.item.dataContext) {
-                    if (key.indexOf('Sample:') > -1) { // TODO: refactor
-                        intKey = key;
-                        break;
-                    }
-                }
-
-                var scansForFeatureSample = {
-                    'scanKey': scanKey,
-                    'intKey': intKey,
-                    'scanTimes': [selectedItem.item.dataContext[scanKey]]
-                };
-                scanTimesByScanKey[scanKey.toString()] = scansForFeatureSample;
-            } else {
-                scanTimesByScanKey[scanKey.toString()]['scanTimes'].push(selectedItem.item.dataContext[scanKey]);
-            }
-        }
-
-        var values = [];
-        for (var key in scanTimesByScanKey) {
-            values.push(scanTimesByScanKey[key]);
-        }
-        var graphPoints = dataController.getMs2Spectra(values);
-
-        updateMassPeakChartData(graphPoints);
+        var spectraIds = this._selectedItems.map(function(item) {
+            return item.item.dataContext[dataController.scanIdKey];
+        });
+        var graphData = dataController.getMs2Spectra(spectraIds);
+        updateMassChartData(graphData[dataController.msnGraphDescKey], graphData[dataController.msnGraphDataKey]);
     }
 };
 
-function createXicChart(div_id, dataProvider, graphs) {
+var colors = ["#FF6600", "#FCD202", "#B0DE09", "#0D8ECF", "#2A0CD0", "#CD0D74", "#CC0000", "#00CC00", "#0000CC", "#DDDDDD", "#999999", "#333333", "#990000"];
+
+function createXicGuides(graphs, graphDescriptors) {
+    var guides = [];
+    for (var i = 0; i < graphs.length; ++i) {
+        var descriptor = graphDescriptors[graphs[i]['id']];
+        guides.push({
+            value: descriptor[dataController.featureStartGraphKey],
+            toValue: descriptor[dataController.featureEndGraphKey],
+            above: false,
+            lineAlpha: 1,
+            fillAlpha: 0.1,
+            dashLength: 10,
+            fillColor: colors[i],
+            lineColor: colors[i]
+        });
+    }
+    return guides;
+}
+
+function toggleAllGraphs(item, action) {
+    for (var chartId in chartsById) {
+        var chart = chartsById[chartId];
+        if (chart == item.chart) {
+            var chartGuides = chart['valueAxes'][0]['guides'];
+            if (action == 'hide') {
+                chartGuides[item.dataItem.index].lineAlpha = 0;
+                chartGuides[item.dataItem.index].fillAlpha = 0;
+            } else {
+                chartGuides[item.dataItem.index].lineAlpha = 1;
+                chartGuides[item.dataItem.index].fillAlpha = 0.1;
+            }
+            chart.validateData();
+        } else {
+            if (action == 'hide') {
+                chart.hideGraph(chart.graphs[item.dataItem.index]);
+            } else {
+                chart.showGraph(chart.graphs[item.dataItem.index]);
+            }
+        }
+    }
+}
+
+function createXicChart(div_id, dataProvider, graphs, guides) {
     return AmCharts.makeChart(div_id, {
         'type': 'xy',
         'theme': 'light',
@@ -422,11 +389,26 @@ function createXicChart(div_id, dataProvider, graphs) {
         'startDuration': 0.1,
         'dataProvider': dataProvider,
         'graphs': graphs,
+        'legend': {
+            'divId': 'legend',
+            "listeners": [{
+                "event": "hideItem",
+                "method": function (item) {
+                    toggleAllGraphs(item, 'hide');
+                }
+            }, {
+                "event": "showItem",
+                "method": function (item) {
+                    toggleAllGraphs(item, 'show');
+                }
+            }]
+        },
         'valueAxes': [{
             'id': 'x',
             'position': 'bottom',
             'dashLength': 1,
-            'title': 'Retention time [s]'
+            'title': 'Retention time [s]',
+            'guides': guides
         }, {
             'id': 'y',
             'dashLength': 1,
@@ -441,7 +423,7 @@ function createXicChart(div_id, dataProvider, graphs) {
         'marginLeft': 60,
         'marginBottom': 60,
         'marginRight': 60,
-        'export': generatePlotExportDescriptor(xicGraphId),
+        'export': generatePlotExportDescriptor(graphExporter.xicGraphId),
         'responsive': {
             'enabled': true
         },
@@ -484,7 +466,7 @@ function createMassPeakChart(div_id, dataProvider, graphs) {
             'position': 'left',
             'title': 'Intensity [number of ions]'
         }],
-        'export': generatePlotExportDescriptor(massPeakGraphId),
+        'export': generatePlotExportDescriptor(graphExporter.massPeakGraphId),
         'responsive': {
             'enabled': true
         }
@@ -492,29 +474,30 @@ function createMassPeakChart(div_id, dataProvider, graphs) {
     return result;
 }
 
-function updateMassPeakChartData(data) {
-    var massPeakGraphs = getGraphs(data, 'mz_', getIsotopicPatternGraphProto);
+function updateMassChartData(graphDescriptors, points) {
+    var massGraphs = getGraphs(graphDescriptors, points, generateMassGraphProto, 0.5, true, massPointAttributeSetter);
 
-    if (null != massPeakChart) {
+    var massPeakChart = chartsById[graphExporter.massPeakGraphId];
+    if (null !== massPeakChart) {
         massPeakChart.clear();
     }
 
-    massPeakChart = createMassPeakChart('mass_peak_div', data, massPeakGraphs);
+    chartsById[graphExporter.massPeakGraphId] = createMassPeakChart('mass_peak_div', points, massGraphs);
 }
 
 function updateChartData(data) {
     xicGraphSelectionState.reset();
+    actualPlotData = data;
 
-    var xicGraphs = getGraphs(data['xic'], 'rt_', getXicGraphProto);
+    var xicGraphs = getGraphs(data[dataController.xicGraphDescKey], data[dataController.xicGraphDataKey], generateXicGraphProto, 0, false, xicPointAttributeSetter);
 
-    if (null != xicChart) {
+    var xicChart = chartsById[graphExporter.xicGraphId];
+    if (null !== xicChart) {
         xicChart.clear();
     }
-    xicChart = createXicChart('xic_div', data['xic'], xicGraphs);
+    chartsById[graphExporter.xicGraphId] = createXicChart('xic_div', data[dataController.xicGraphDataKey], xicGraphs, createXicGuides(xicGraphs, data[dataController.xicGraphDescKey]));
 
-    updateMassPeakChartData(data['isotopicPattern']);
-
-    lastPlotData = data;
+    updateMassChartData(data[dataController.ms1GraphDescKey], data[dataController.ms1GraphDataKey]);
 }
 
 dataController.updatePlot.connect(this, updateChartData);

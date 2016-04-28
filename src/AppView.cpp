@@ -210,4 +210,9 @@ void AppView::graphViewLoaded(bool ok)
     graphViewInited = true;
 }
 
+void AppView::resetSelection()
+{
+    ui->featureTableView->selectionModel()->clearSelection();
+}
+
 } // namespace ov

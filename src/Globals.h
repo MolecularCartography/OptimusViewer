@@ -8,6 +8,7 @@ namespace ov {
 typedef qint64 SampleId;
 typedef QString DataSourceId;
 typedef qint64 FeatureId;
+typedef qint64 FragmentationSpectrumId;
 typedef QString GraphId;
 typedef QString FormatId;
 

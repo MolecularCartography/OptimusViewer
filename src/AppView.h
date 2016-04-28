@@ -41,6 +41,7 @@ signals:
 
 public slots:
     void samplesChanged();
+    void resetSelection();
 
 private slots:
     void graphViewLoaded(bool ok);

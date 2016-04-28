@@ -10,7 +10,7 @@ namespace ov {
 bool AppController::staticInitializationDone = false;
 
 AppController::AppController()
-    : featureModel(NULL, &dataSource), xicDataController(&dataSource), featureTableExporter(featureModel)
+    : featureModel(NULL, &dataSource), graphDataController(&dataSource), featureTableExporter(featureModel)
 {
     initStatic();
     connectSingals();
@@ -52,16 +52,18 @@ void AppController::connectSingals()
     connect(&view, &AppView::about, &QApplication::aboutQt);
     connect(&view, &AppView::exit, &QCoreApplication::quit);
     connect(&view, &AppView::graphViewAboutToLoad, this, &AppController::graphViewAboutToLoad);
-    connect(&view, &AppView::featureSelectionChanged, &xicDataController, &GraphDataController::featureSelectionChanged);
+    connect(&view, &AppView::featureSelectionChanged, &graphDataController, &GraphDataController::featureSelectionChanged);
 
     connect(&dataSource, &FeatureDataSource::samplesChanged, &view, &AppView::samplesChanged);
-    connect(&dataSource, &FeatureDataSource::samplesChanged, &xicDataController, &GraphDataController::samplesChanged);
+    connect(&dataSource, &FeatureDataSource::samplesChanged, &graphDataController, &GraphDataController::samplesChanged);
+
+    connect(&graphDataController, &GraphDataController::resetActiveFeatures, &view, &AppView::resetSelection);
 }
 
 void AppController::graphDataControllerRequested()
 {
     QWebFrame *frame = dynamic_cast<QWebFrame *>(sender());
-    frame->addToJavaScriptWindowObject("dataController", &xicDataController);
+    frame->addToJavaScriptWindowObject("dataController", &graphDataController);
     frame->addToJavaScriptWindowObject("graphExporter", &graphExporter);
 }
 

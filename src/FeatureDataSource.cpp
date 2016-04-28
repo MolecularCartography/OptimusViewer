@@ -1,10 +1,13 @@
 #include <QApplication>
+#include <QDataStream>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QSqlQuery>
 #include <QVariant>
 
 #include "FeatureDataSource.h"
+
+const int QUERY_PARAMS_LIMIT = 999;
 
 namespace ov {
 
@@ -18,19 +21,34 @@ bool FeatureDataSource::isValid() const
     return db.isOpen();
 }
 
-QList<GraphPoint> FeatureDataSource::getXicData(const QMultiHash<SampleId, FeatureId> &featuresBySample) const
+QMultiHash<SampleId, FeatureId> FeatureDataSource::getFeaturesToExtract(const QMultiHash<SampleId, FeatureId> &featuresBySample,
+    QHash<SampleId, QHash<FeatureId, FeatureData> > &presentFeatures, QHash<SampleId, QHash<FeatureId, QList<Ms2ScanInfo> > > &presentMs2Scans)
 {
-    Q_ASSERT(isValid());
-    QList<GraphPoint> result;
-    if (featuresBySample.isEmpty()) {
-        return result;
+    QMultiHash<SampleId, FeatureId> featuresToExtract;
+    foreach(const SampleId &sampleId, featuresBySample.keys()) {
+        foreach(const FeatureId &featureId, featuresBySample.values(sampleId)) {
+            if (currentFeatures.contains(sampleId) && currentFeatures[sampleId].contains(featureId)) {
+                presentFeatures[sampleId].insert(featureId, currentFeatures[sampleId][featureId]);
+                presentMs2Scans[sampleId].insert(featureId, currentMs2Scans[sampleId][featureId]);
+            } else {
+                featuresToExtract.insert(sampleId, featureId);
+            }
+        }
+    }
+    return featuresToExtract;
+}
+
+void FeatureDataSource::fetchFeatures(const QMultiHash<SampleId, FeatureId> &featureIdsToExtract, QHash<SampleId, QHash<FeatureId, FeatureData> > &features)
+{
+    if (featureIdsToExtract.isEmpty()) {
+        return;
     }
 
-    QString queryStr = "SELECT sample_id, feature_id, rt, intensity FROM FeatureXIC WHERE ";
+    QString queryStr = "SELECT sample_id, feature_id, data, rt_start, rt_end FROM FeatureMassTrace WHERE ";
     QVariantList bindParameters;
     const QString queryConjunction = " OR ";
-    foreach (const SampleId &sampleId, featuresBySample.keys()) {
-        foreach (const FeatureId &featureId, featuresBySample.values(sampleId)) {
+    foreach(const SampleId &sampleId, featureIdsToExtract.keys()) {
+        foreach(const FeatureId &featureId, featureIdsToExtract.values(sampleId)) {
             queryStr.append("(sample_id = ? AND feature_id = ?)");
             bindParameters.append(sampleId);
             bindParameters.append(featureId);
@@ -38,44 +56,68 @@ QList<GraphPoint> FeatureDataSource::getXicData(const QMultiHash<SampleId, Featu
         }
     }
     queryStr.chop(queryConjunction.length());
-    queryStr.append(" ORDER BY rt");
 
     QSqlQuery query;
     query.prepare(queryStr);
-    foreach (const QVariant &value, bindParameters) {
+    foreach(const QVariant &value, bindParameters) {
         query.addBindValue(value);
     }
     const bool ok = query.exec();
     Q_ASSERT(ok);
 
     while (query.next()) {
-        result.append(GraphPoint(query.value(0).value<SampleId>(),
-            query.value(1).value<FeatureId>(), query.value(2).toReal(), query.value(3).toReal()));
+        const SampleId sampleId = query.value(0).value<SampleId>();
+        const SampleId featureId = query.value(1).value<FeatureId>();
+        QByteArray massTraceData = query.value(2).toByteArray();
+        QDataStream binaryStream(&massTraceData, QIODevice::ReadOnly);
+        binaryStream.setByteOrder(QDataStream::LittleEndian);
+        QList<QVector3D> massTrace;
+        while (!binaryStream.atEnd()) {
+            double mz = 0.0;
+            float rt = 0.0;
+            float intensity = 0.0;
+            int bytesRead = binaryStream.readRawData(reinterpret_cast<char *>(&mz), sizeof(mz));
+            Q_ASSERT(bytesRead == sizeof(mz));
+            bytesRead = binaryStream.readRawData(reinterpret_cast<char *>(&rt), sizeof(rt));
+            Q_ASSERT(bytesRead == sizeof(rt));
+            bytesRead = binaryStream.readRawData(reinterpret_cast<char *>(&intensity), sizeof(intensity));
+            Q_ASSERT(bytesRead == sizeof(intensity));
+            massTrace.append(QVector3D(mz, rt, intensity));
+        }
+        const qreal massTraceStart = query.value(3).toReal();
+        const qreal massTraceEnd = query.value(4).toReal();
+
+        if (!features.contains(sampleId) || !features[sampleId].contains(featureId)) {
+            features[sampleId][featureId] = FeatureData(sampleId, featureId, QList<QList<QVector3D> >() << massTrace, massTraceStart, massTraceEnd);
+        } else {
+            FeatureData &feature = features[sampleId][featureId];
+            feature.massTraces.append(massTrace);
+            feature.featureStart = qMin(feature.featureStart, massTraceStart);
+            feature.featureEnd = qMax(feature.featureEnd, massTraceEnd);
+        }
     }
-    return result;
 }
 
-QList<GraphPoint> FeatureDataSource::getIsotopicPatternData(const QMultiHash<SampleId, FeatureId> &featuresBySample) const
+void FeatureDataSource::fetchMs2Scans(const QMultiHash<SampleId, FeatureId> &featuresToExtract, QHash<SampleId, QHash<FeatureId, QList<Ms2ScanInfo> > > &ms2Scans)
 {
-    Q_ASSERT(isValid());
-    QList<GraphPoint> result;
-    if (featuresBySample.isEmpty()) {
-        return result;
+    if (featuresToExtract.isEmpty()) {
+        return;
     }
 
-    QString queryStr = "SELECT F.sample_id, F.feature_id, M.mz, M.intensity FROM FeatureMs1Peak AS F, MassPeak AS M WHERE ";
+    QString queryStr = "SELECT FMT.sample_id, FMT.feature_id, FS.scan_time, FS.precursor_mz, FS.id FROM FeatureMassTrace AS FMT, "
+        "MassTraceFragmentationSpectrum AS MSFS, FragmentationSpectrum AS FS WHERE FMT.id = MSFS.mt_id AND MSFS.spectrum_id = FS.id AND (";
     QVariantList bindParameters;
     const QString queryConjunction = " OR ";
-    foreach(const SampleId &sampleId, featuresBySample.keys()) {
-        foreach(const FeatureId &featureId, featuresBySample.values(sampleId)) {
-            queryStr.append("(F.sample_id = ? AND F.feature_id = ? AND F.mass_peak_id = M.id)");
+    foreach(const SampleId &sampleId, featuresToExtract.keys()) {
+        foreach(const FeatureId &featureId, featuresToExtract.values(sampleId)) {
+            queryStr.append("(FMT.sample_id = ? AND FMT.feature_id = ?)");
             bindParameters.append(sampleId);
             bindParameters.append(featureId);
             queryStr.append(queryConjunction);
         }
     }
     queryStr.chop(queryConjunction.length());
-    queryStr.append(" ORDER BY M.mz");
+    queryStr.append(") ORDER BY FS.scan_time");
 
     QSqlQuery query;
     query.prepare(queryStr);
@@ -86,90 +128,91 @@ QList<GraphPoint> FeatureDataSource::getIsotopicPatternData(const QMultiHash<Sam
     Q_ASSERT(ok);
 
     while (query.next()) {
-        result.append(GraphPoint(query.value(0).value<SampleId>(),
-            query.value(1).value<FeatureId>(), query.value(2).toReal(), query.value(3).toReal()));
+        const SampleId sampleId = query.value(0).value<SampleId>();
+        const SampleId featureId = query.value(1).value<FeatureId>();
+        ms2Scans[sampleId][featureId].append(Ms2ScanInfo(query.value(2).toReal(), query.value(3).toReal(), query.value(4).value<FragmentationSpectrumId>()));
     }
-    return result;
 }
 
-QList<GraphPoint> FeatureDataSource::getMs2SpectraData(const QHash<SampleId, QMultiHash<FeatureId, qreal> > &featureScansBySample) const
+bool FeatureDataSource::setActiveFeatures(const QMultiHash<SampleId, FeatureId> &featuresBySample)
 {
-    Q_ASSERT(isValid());
-    QList<GraphPoint> result;
-    if (featureScansBySample.isEmpty()) {
-        return result;
-    }
-
-    QString queryStr = "SELECT F.sample_id, F.feature_id, F.scan_time, F.precursor_mz, M.mz, M.intensity FROM FeatureMs2Peak AS F, MassPeak AS M WHERE ";
-    QVariantList bindParameters;
-    const QString queryConjunction = " OR ";
-    foreach(const SampleId &sampleId, featureScansBySample.keys()) {
-        foreach(const FeatureId &featureId, featureScansBySample[sampleId].keys()) {
-            foreach (qreal scanStartTime, featureScansBySample[sampleId].values(featureId)) {
-                queryStr.append("(F.sample_id = ? AND F.feature_id = ? AND F.scan_time = ? AND F.mass_peak_id = M.id)");
-                bindParameters.append(sampleId);
-                bindParameters.append(featureId);
-                bindParameters.append(scanStartTime);
-                queryStr.append(queryConjunction);
-            }
-        }
-    }
-    queryStr.chop(queryConjunction.length());
-    queryStr.append(" ORDER BY M.mz");
-
-    QSqlQuery query;
-    query.prepare(queryStr);
-    foreach(const QVariant &value, bindParameters) {
-        query.addBindValue(value);
-    }
-    const bool ok = query.exec();
-    Q_ASSERT(ok);
-
-    while (query.next()) {
-        QMap<GraphPoint::Attribute, QVariant> attrs;
-        attrs[GraphPoint::SCAN_START_TIME] = query.value(2);
-        attrs[GraphPoint::PRECURSOR_MZ_ATTR] = query.value(3);
-        result.append(GraphPoint(query.value(0).value<SampleId>(),
-            query.value(1).value<FeatureId>(), query.value(4).toReal(), query.value(5).toReal(), attrs));
-    }
-    return result;
-}
-
-QList<GraphPoint> FeatureDataSource::getMs2ScanData(const QMultiHash<SampleId, FeatureId> &featuresBySample) const
-{
-    Q_ASSERT(isValid());
-    QList<GraphPoint> result;
     if (featuresBySample.isEmpty()) {
+        currentFeatures.clear();
+        currentMs2Scans.clear();
+        return true;
+    }
+
+    // Limit on number of SQLite query parameters
+    // TODO: consider splitting the query into multiple ones.
+    if (featuresBySample.values().size() * 2 > QUERY_PARAMS_LIMIT) {
+        currentFeatures.clear();
+        currentMs2Scans.clear();
+        return false;
+    }
+
+    QHash<SampleId, QHash<FeatureId, FeatureData> > newFeatures;
+    QHash<SampleId, QHash<FeatureId, QList<Ms2ScanInfo> > > newMs2Scans;
+    const QMultiHash<SampleId, FeatureId> featuresToExtract = getFeaturesToExtract(featuresBySample, newFeatures, newMs2Scans);
+
+    fetchFeatures(featuresToExtract, newFeatures);
+    currentFeatures = newFeatures;
+
+    fetchMs2Scans(featuresToExtract, newMs2Scans);
+    currentMs2Scans = newMs2Scans;
+
+    return true;
+}
+
+QList<FeatureData> FeatureDataSource::getMs1Data() const
+{
+    QList<FeatureData> result;
+    foreach (const SampleId &sampleId, currentFeatures.keys()) {
+        result.append(currentFeatures[sampleId].values());
+    }
+    return result;
+}
+
+QHash<SampleId, QHash<FeatureId, QList<Ms2ScanInfo> > > FeatureDataSource::getMs2ScanData() const
+{
+    Q_ASSERT(isValid());
+    return currentMs2Scans;
+}
+
+QHash<FragmentationSpectrumId, QList<QPointF> > FeatureDataSource::getMs2SpectraData(const QList<FragmentationSpectrumId> &spectrumIds) const
+{
+    Q_ASSERT(isValid());
+    QHash<FragmentationSpectrumId, QList<QPointF> > result;
+
+    if (spectrumIds.size() > QUERY_PARAMS_LIMIT) {
         return result;
     }
 
-    QString queryStr = "SELECT F.sample_id, F.feature_id, F.scan_time, F.precursor_mz FROM FeatureMs2Peak AS F, MassPeak AS M WHERE ";
-    QVariantList bindParameters;
-    const QString queryConjunction = " OR ";
-    foreach(const SampleId &sampleId, featuresBySample.keys()) {
-        foreach(const FeatureId &featureId, featuresBySample.values(sampleId)) {
-            queryStr.append("(F.sample_id = ? AND F.feature_id = ? AND F.mass_peak_id = M.id)");
-            bindParameters.append(sampleId);
-            bindParameters.append(featureId);
-            queryStr.append(queryConjunction);
-        }
-    }
-    queryStr.chop(queryConjunction.length());
-    queryStr.append(" ORDER BY F.scan_time");
+    const QString queryStr = QString("SELECT FS.id, FS.data FROM FragmentationSpectrum AS FS WHERE FS.id IN (%1)").arg(QStringList(QVector<QString>(spectrumIds.size(), "?").toList()).join(","));
 
     QSqlQuery query;
     query.prepare(queryStr);
-    foreach(const QVariant &value, bindParameters) {
+    foreach(const FragmentationSpectrumId &value, spectrumIds) {
         query.addBindValue(value);
     }
     const bool ok = query.exec();
     Q_ASSERT(ok);
 
     while (query.next()) {
-        QMap<GraphPoint::Attribute, QVariant> attrs;
-        attrs[GraphPoint::PRECURSOR_MZ_ATTR] = query.value(3);
-        result.append(GraphPoint(query.value(0).value<SampleId>(), query.value(1).value<FeatureId>(),
-            query.value(2).toReal(), 0.0, attrs));
+        const FragmentationSpectrumId spectrumId = query.value(0).value<FragmentationSpectrumId>();
+        QByteArray spectrumData = query.value(1).toByteArray();
+        QDataStream binaryStream(&spectrumData, QIODevice::ReadOnly);
+        binaryStream.setByteOrder(QDataStream::LittleEndian);
+        QList<QPointF> spectrum;
+        while (!binaryStream.atEnd()) {
+            double mz = 0.0;
+            float intensity = 0.0;
+            int bytesRead = binaryStream.readRawData(reinterpret_cast<char *>(&mz), sizeof(mz));
+            Q_ASSERT(bytesRead == sizeof(mz));
+            bytesRead = binaryStream.readRawData(reinterpret_cast<char *>(&intensity), sizeof(intensity));
+            Q_ASSERT(bytesRead == sizeof(intensity));
+            spectrum.append(QPointF(mz, intensity));
+        }
+        result[spectrumId] = spectrum;
     }
     return result;
 }
@@ -184,6 +227,7 @@ void FeatureDataSource::selectDataSource()
     } else {
         updateSamplesInfo();
         updateFeaturesInfo();
+        currentFeatures.clear();
         emit samplesChanged();
     }
 }
