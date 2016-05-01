@@ -129,5 +129,6 @@
         <file>src/js/amcharts/themes/chalk.js</file>
         <file>src/js/amcharts/themes/light.js</file>
         <file>src/js/amcharts/themes/patterns.js</file>
+        <file>src/js/randomColor/randomColor.js</file>
     </qresource>
 </RCC>

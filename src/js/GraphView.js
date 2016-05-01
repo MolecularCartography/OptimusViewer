@@ -5,9 +5,28 @@ chartsById[graphExporter.massPeakChartId] = null;
 var imageFormats = graphExporter.supportedImageFormatIds;
 var dataFormats = graphExporter.supportedDataFormatIds;
 
-var auxPointFlag = "aux_data";
+var auxPointFlag = 'aux_data';
+var graphTitleKey = 'title';
+var graphXFieldKey = 'xField';
+var graphYFieldKey = 'yField';
+var graphColorKey = 'lineColor';
 
 var actualPlotData = {};
+
+var graphColors = {
+    _colorGenerationSize: 10,
+    // default amCharts colors
+    _colors: ["#FF6600", "#FCD202", "#B0DE09", "#0D8ECF", "#2A0CD0", "#CD0D74", "#CC0000", "#00CC00", "#0000CC", "#DDDDDD", "#999999", "#333333", "#990000"],
+    getColor: function(number) {
+        if (number >= this._colors.length) {
+            this._colors = this._colors.concat(randomColor({count: number - this._colors.length + 1 + this._colorGenerationSize}));
+        }
+        if (number >= this._colors.length) {
+            throw 'Internal error: failed to generate new graph colors';
+        }
+        return this._colors[number];
+    }
+};
 
 function clone(obj) {
     if (null == obj || 'object' != typeof obj) return obj;
@@ -39,7 +58,7 @@ function getCoordinates(chartId) {
         resultPoint['x'] = originalPoint[xKey];
 
         var yKey = graphDescriptors[graphId][dataController.yFieldKey];
-        var graphName = currentGraph['title'].replace('<br>', '; ');
+        var graphName = currentGraph[graphTitleKey].replace('<br>', '; ');
         resultPoint['y'] = graphName;
         resultPoint[graphName] = originalPoint[yKey];
 
@@ -200,14 +219,15 @@ function getGraphs(graphDescriptors, points, graphProtoGenerator, horizontalOffs
 
         if (curGraphId !== lastGraphId) {
             var currentGraph = graphProtoGenerator();
-            currentGraph['xField'] = curGraphDescriptor[dataController.xFieldKey];
-            currentGraph['yField'] = curGraphDescriptor[dataController.yFieldKey];
-            currentGraph['title'] = 'Sample: ' + curGraphDescriptor[dataController.sampleNameGraphKey];
+            currentGraph[graphXFieldKey] = curGraphDescriptor[dataController.xFieldKey];
+            currentGraph[graphYFieldKey] = curGraphDescriptor[dataController.yFieldKey];
+            currentGraph[graphTitleKey] = 'Sample: ' + curGraphDescriptor[dataController.sampleNameGraphKey];
             if (dataController.scanIdKey in curGraphDescriptor) {
-                currentGraph['title'] += '<br>Scan ID: ' + curGraphDescriptor[dataController.scanIdKey];
+                currentGraph[graphTitleKey] += '<br>Scan ID: ' + curGraphDescriptor[dataController.scanIdKey];
             } else if (dataController.consensusMzGraphKey in curGraphDescriptor) {
-                currentGraph['title'] += '<br>Consensus m/z: ' + curGraphDescriptor[dataController.consensusMzGraphKey].round(4);
+                currentGraph[graphTitleKey] += '<br>Consensus m/z: ' + curGraphDescriptor[dataController.consensusMzGraphKey].round(4);
             }
+            currentGraph[graphColorKey] = graphColorKey in curGraphDescriptor ? curGraphDescriptor[graphColorKey] : graphColors.getColor(graphs.length);
             currentGraph['id'] = curGraphId;
             graphs.push(currentGraph);
             lastGraphId = curGraphId;
@@ -237,11 +257,13 @@ var xicGraphSelectionState = {
     _selectedCharts: [],
     _alphasByGraph: [],
     _selectionActive: false,
+    _lastUsedColorIndex: -1,
 
     reset: function() {
         this._selectedItems = [];
         this._selectedCharts = [];
         this._alphasByGraph = [];
+        this._lastUsedColorIndex = -1;
         this._selectionActive = false;
     },
 
@@ -262,6 +284,7 @@ var xicGraphSelectionState = {
             }
             this._selectedCharts = [];
             this._selectionActive = false;
+            this._lastUsedColorIndex = -1;
 
             delete actualPlotData[dataController.msnGraphDescKey];
             delete actualPlotData[dataController.msnGraphDataKey];
@@ -283,7 +306,9 @@ var xicGraphSelectionState = {
 
         if (event.event.ctrlKey) {
             for (var i = 0; i < this._selectedItems.length; ++i) {
-                if (this._selectedItems[i]['item'].x == event.item.x && this._selectedItems[i]['item'].y == event.item.y) {
+                if (this._selectedItems[i]['item'].values.x == event.item.values.x
+                    && this._selectedItems[i]['item'].values.y == event.item.values.y)
+                {
                     if (this._selectedItems.length == 1) {
                         this.deselect(event.event);
                         return;
@@ -320,8 +345,8 @@ var xicGraphSelectionState = {
 
             this._selectionActive = true;
         }
-
-        event.item.dataContext[event.graph.colorField] = '#FFD700';
+        // color of selected ms2 scan point is the same as color of ms2 spectrum graph
+        event.item.dataContext[event.graph.colorField] = graphColors.getColor(++this._lastUsedColorIndex);
         event.chart.validateData();
 
         this._updateMs2Spectra();
@@ -335,9 +360,11 @@ var xicGraphSelectionState = {
         var graphDescriptors = graphData[dataController.msnGraphDescKey];
         for (var graphId in graphDescriptors) {
             var xicPoint = null;
+            var xicPointColor = '';
             for (var i = 0; i < this._selectedItems.length; ++i) {
                 if (this._selectedItems[i].item.dataContext[dataController.spectrumIdKey] == graphId) {
                     xicPoint = this._selectedItems[i].item.dataContext;
+                    xicPointColor = xicPoint[this._selectedItems[i]['colorField']];
                     break;
                 }
             }
@@ -348,14 +375,13 @@ var xicGraphSelectionState = {
             graphDescriptors[graphId][dataController.scanIdKey] = xicPoint[dataController.scanIdKey];
             graphDescriptors[graphId][dataController.sampleNameGraphKey]
                 = actualPlotData[dataController.xicGraphDescKey][xicPoint[dataController.graphIdKey]][dataController.sampleNameGraphKey];
+            graphDescriptors[graphId][graphColorKey] = xicPointColor;
         }
         actualPlotData[dataController.msnGraphDescKey] = graphDescriptors;
         actualPlotData[dataController.msnGraphDataKey] = graphData[dataController.msnGraphDataKey];
         updateMassChartData(graphDescriptors, graphData[dataController.msnGraphDataKey], true);
     }
 };
-
-var colors = ["#FF6600", "#FCD202", "#B0DE09", "#0D8ECF", "#2A0CD0", "#CD0D74", "#CC0000", "#00CC00", "#0000CC", "#DDDDDD", "#999999", "#333333", "#990000"];
 
 function createXicGuides(graphs, graphDescriptors) {
     var guides = [];
@@ -368,8 +394,8 @@ function createXicGuides(graphs, graphDescriptors) {
             lineAlpha: 1,
             fillAlpha: 0.1,
             dashLength: 10,
-            fillColor: colors[i],
-            lineColor: colors[i]
+            fillColor: graphColors.getColor(i),
+            lineColor: graphColors.getColor(i)
         });
     }
     return guides;
@@ -411,7 +437,7 @@ function handleXicLegendClick(graph) {
                 chartGuides[graphIndex].fillAlpha = 0.1;
             }
             curChart.validateData();
-        } else if (curChart.graphs[graphIndex]['title'] === graph['title']) {
+        } else if (!xicGraphSelectionState._selectionActive) {
             if (actionHide) {
                 curChart.hideGraph(curChart.graphs[graphIndex]);
             } else {
@@ -472,8 +498,22 @@ function createXicChart(div_id, dataProvider, graphs, guides) {
     return result;
 }
 
+function isMouseOverZoomButton(event) {
+    var zoomOutButton = this.querySelector('.amcharts-zoom-out-bg');
+    if (zoomOutButton) {
+        var rect = zoomOutButton.getBoundingClientRect();
+        var x = event.clientX;
+        var y = event.clientY;
+        return !(x < rect.left || x >= rect.left + rect.width || y < rect.top || y >= rect.top + rect.height);
+    } else {
+        return false;
+    }
+}
+
 document.getElementById('xic_container').addEventListener('click', function (event) {
-    xicGraphSelectionState.deselect(event);
+    if (!isMouseOverZoomButton.bind(this)(event)) {
+        xicGraphSelectionState.deselect(event);
+    }
 });
 
 function handleMassPeakLegendClick(graph) {
@@ -531,7 +571,7 @@ function createMassPeakChart(div_id, dataProvider, graphs, createSeparateLegend)
     if (!createSeparateLegend) { // sync hidden graphs
         var xicGraphs = chartsById[graphExporter.xicChartId].graphs;
         var massPeakGraphs = result.graphs;
-        if (massPeakGraphs.length !== xicGraphs.length || xicGraphs[0]['title'] !== massPeakGraphs[0]['title']) {
+        if (xicGraphSelectionState._selectionActive) {
             return;
         }
         for (var i = 0; i < xicGraphs.length; ++i) {
