@@ -34,7 +34,7 @@ signals:
     void open();
     void exit();
     void about();
-    void exportToCsv();
+    void exportToCsv(const QVector<int> &visibleColumns);
 
     void graphViewAboutToLoad(QWebView *view);
     void featureSelectionChanged(const QMultiHash<SampleId, FeatureId> &newSelection, const QMap<FeatureId, qreal> &featureMzs);
@@ -49,6 +49,7 @@ private slots:
     void featureTableHeaderContextMenu(const QPoint &p);
     void hideColumnTriggered();
     void showHideColumnsTriggered();
+    void exportToCsvTriggered();
 
 private:
     void setDefaultSplitterSize();

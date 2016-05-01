@@ -81,12 +81,25 @@ void AppView::showHideColumnsTriggered()
     }
 }
 
+void AppView::exportToCsvTriggered()
+{
+    QVector<int> visibleColumns;
+    FeatureTableModel *model = getFeatureTableModel();
+    const int columnCount = model->columnCount();
+    for (int i = 1; i < columnCount; ++i) {
+        if (!ui->featureTableView->isColumnHidden(i)) {
+            visibleColumns.append(i);
+        }
+    }
+    emit exportToCsv(visibleColumns);
+}
+
 void AppView::connectGuiSignals()
 {
     connect(ui->actionAbout, &QAction::triggered, this, &AppView::about);
     connect(ui->actionExit, &QAction::triggered, this, &AppView::exit);
     connect(ui->actionOpen, &QAction::triggered, this, &AppView::open);
-    connect(ui->actionExportToCsv, &QAction::triggered, this, &AppView::exportToCsv);
+    connect(ui->actionExportToCsv, &QAction::triggered, this, &AppView::exportToCsvTriggered);
 }
 
 void AppView::featureTableSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected)
@@ -169,6 +182,10 @@ void AppView::featureTableHeaderContextMenu(const QPoint &p)
 {
     QHeaderView *headerView = ui->featureTableView->horizontalHeader();
     lastReferredLogicalColumn = headerView->logicalIndexAt(p);
+
+    if (-1 == lastReferredLogicalColumn) {
+        return;
+    }
 
     QMenu *menu = new QMenu(this);
     if (headerView->hiddenSectionCount() < headerView->count() - 1) {

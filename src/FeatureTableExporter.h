@@ -14,7 +14,7 @@ public:
     FeatureTableExporter(const FeatureTableModel &model);
 
 public slots:
-    void exportFeatures();
+    void exportFeatures(const QVector<int> &visibleColumns);
 
 private:
     const FeatureTableModel &model;
