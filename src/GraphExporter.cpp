@@ -38,12 +38,12 @@ GraphExporter::GraphExporter(QWebView *graphView)
 
 }
 
-QString GraphExporter::getXicGraphId() const
+QString GraphExporter::getXicChartId() const
 {
     return GraphIds::XIC_ID;
 }
 
-QString GraphExporter::getMassPeakGraphId() const
+QString GraphExporter::getMassPeakChartId() const
 {
     return GraphIds::MASS_PEAK_ID;
 }

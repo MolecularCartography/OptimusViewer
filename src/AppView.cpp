@@ -125,7 +125,7 @@ void AppView::setShortcuts()
 void AppView::setDefaultSplitterSize()
 {
     const int wholeSize = ui->mainSplitter->height();
-    ui->mainSplitter->setSizes(QList<int>() << wholeSize / 2 << wholeSize / 2);
+    ui->mainSplitter->setSizes(QList<int>() << 3 * wholeSize / 5 << 2 * wholeSize / 5);
 }
 
 void AppView::initGraphView()

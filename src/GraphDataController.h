@@ -23,6 +23,7 @@ class GraphDataController: public QObject
     Q_PROPERTY(QString graphIdKey READ getGraphIdKey)
 
     Q_PROPERTY(QString precursorMzKey READ getPrecursorMzKey)
+    Q_PROPERTY(QString spectrumIdKey READ getSpectrumIdKey)
     Q_PROPERTY(QString scanIdKey READ getScanIdKey)
 
     Q_PROPERTY(QString sampleNameGraphKey READ getSampleNameGraphKey)
@@ -49,6 +50,7 @@ public:
     QString getGraphIdKey() const;
 
     QString getPrecursorMzKey() const;
+    QString getSpectrumIdKey() const;
     QString getScanIdKey() const;
 
     QString getSampleNameGraphKey() const;

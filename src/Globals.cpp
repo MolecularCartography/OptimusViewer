@@ -10,9 +10,9 @@ const GraphId MASS_PEAK_ID = "MassPeak";
 QString getHtmlContainerIdForGraph(const GraphId &id)
 {
     if (id == XIC_ID) {
-        return "xic_div";
+        return "xic_container";
     } else if (id == MASS_PEAK_ID) {
-        return "mass_peak_div";
+        return "mass_peak_container";
     } else {
         Q_ASSERT(false);
         return QString();

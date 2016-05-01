@@ -2,8 +2,8 @@
 
 namespace ov {
 
-Ms2ScanInfo::Ms2ScanInfo(qreal scanTime, qreal precursorMz, const FragmentationSpectrumId &scanId)
-    : scanTime(scanTime), precursorMz(precursorMz), scanId(scanId)
+Ms2ScanInfo::Ms2ScanInfo(qreal scanTime, qreal precursorMz, const FragmentationSpectrumId &spectrumId, const QString &scanId)
+    : scanTime(scanTime), precursorMz(precursorMz), spectrumId(spectrumId), scanId(scanId)
 {
 
 }

@@ -1,6 +1,6 @@
 var chartsById = {};
-chartsById[graphExporter.xicGraphId] = null;
-chartsById[graphExporter.massPeakGraphId] = null;
+chartsById[graphExporter.xicChartId] = null;
+chartsById[graphExporter.massPeakChartId] = null;
 
 var imageFormats = graphExporter.supportedImageFormatIds;
 var dataFormats = graphExporter.supportedDataFormatIds;
@@ -23,8 +23,10 @@ function getCoordinates(chart) {
     var yCoordKeys = [];
     for (var i = 0; i < chart.graphs.length; ++i) {
         var graph = chart.graphs[i];
-        xCoordKeys.push(graph.xField);
-        yCoordKeys.push(graph.yField);
+        if (!graph.hidden) {
+            xCoordKeys.push(graph.xField);
+            yCoordKeys.push(graph.yField);
+        }
     }
 
     var resultPoints = [];
@@ -211,8 +213,12 @@ function getGraphs(graphDescriptors, points, graphProtoGenerator, horizontalOffs
             var currentGraph = graphProtoGenerator();
             currentGraph['xField'] = curGraphDescriptor[dataController.xFieldKey];
             currentGraph['yField'] = curGraphDescriptor[dataController.yFieldKey];
-            currentGraph['title'] = 'Sample: ' + curGraphDescriptor[dataController.sampleNameGraphKey] + '<br>Consensus m/z: '
-                + curGraphDescriptor[dataController.consensusMzGraphKey].round(4);
+            currentGraph['title'] = 'Sample: ' + curGraphDescriptor[dataController.sampleNameGraphKey];
+            if (dataController.scanIdKey in curGraphDescriptor) {
+                currentGraph['title'] += '<br>Scan ID: ' + curGraphDescriptor[dataController.scanIdKey];
+            } else if (dataController.consensusMzGraphKey in curGraphDescriptor) {
+                currentGraph['title'] += '<br>Consensus m/z: ' + curGraphDescriptor[dataController.consensusMzGraphKey].round(4);
+            }
             currentGraph['id'] = curGraphId;
             graphs.push(currentGraph);
             lastGraphId = curGraphId;
@@ -268,7 +274,7 @@ var xicGraphSelectionState = {
             this._selectedCharts = [];
             this._selectionActive = false;
 
-            updateMassChartData(actualPlotData[dataController.ms1GraphDescKey], actualPlotData[dataController.ms1GraphDataKey]);
+            updateMassChartData(actualPlotData[dataController.ms1GraphDescKey], actualPlotData[dataController.ms1GraphDataKey], false);
         }
     },
 
@@ -331,10 +337,27 @@ var xicGraphSelectionState = {
 
     _updateMs2Spectra: function() {
         var spectraIds = this._selectedItems.map(function(item) {
-            return item.item.dataContext[dataController.scanIdKey];
+            return item.item.dataContext[dataController.spectrumIdKey];
         });
         var graphData = dataController.getMs2Spectra(spectraIds);
-        updateMassChartData(graphData[dataController.msnGraphDescKey], graphData[dataController.msnGraphDataKey]);
+        var graphDescriptors = graphData[dataController.msnGraphDescKey];
+        for (var graphId in graphDescriptors) {
+            var xicPoint = null;
+            for (var i = 0; i < this._selectedItems.length; ++i) {
+                if (this._selectedItems[i].item.dataContext[dataController.spectrumIdKey] == graphId) {
+                    xicPoint = this._selectedItems[i].item.dataContext;
+                    break;
+                }
+            }
+            if (null === xicPoint) {
+                throw 'Failed to find XIC point with fragmentation spectrum ID ' + graphId;
+            }
+
+            graphDescriptors[graphId][dataController.scanIdKey] = xicPoint[dataController.scanIdKey];
+            graphDescriptors[graphId][dataController.sampleNameGraphKey]
+                = actualPlotData[dataController.xicGraphDescKey][xicPoint[dataController.graphIdKey]][dataController.sampleNameGraphKey];
+        }
+        updateMassChartData(graphDescriptors, graphData[dataController.msnGraphDataKey], true);
     }
 };
 
@@ -371,7 +394,7 @@ function toggleAllGraphs(item, action) {
                 chartGuides[item.dataItem.index].fillAlpha = 0.1;
             }
             chart.validateData();
-        } else {
+        } else if (chart.graphs[item.dataItem.index]['title'] === item.chart[item.dataItem.index]['title']) {
             if (action == 'hide') {
                 chart.hideGraph(chart.graphs[item.dataItem.index]);
             } else {
@@ -389,16 +412,18 @@ function createXicChart(div_id, dataProvider, graphs, guides) {
         'startDuration': 0.1,
         'dataProvider': dataProvider,
         'graphs': graphs,
+        'maxZoomFactor': 10000,
         'legend': {
-            'divId': 'legend',
-            "listeners": [{
-                "event": "hideItem",
-                "method": function (item) {
+            'divId': 'legend_container',
+            'align': 'center',
+            'listeners': [{
+                'event': 'hideItem',
+                'method': function (item) {
                     toggleAllGraphs(item, 'hide');
                 }
             }, {
-                "event": "showItem",
-                "method": function (item) {
+                'event': 'showItem',
+                'method': function (item) {
                     toggleAllGraphs(item, 'show');
                 }
             }]
@@ -423,7 +448,7 @@ function createXicChart(div_id, dataProvider, graphs, guides) {
         'marginLeft': 60,
         'marginBottom': 60,
         'marginRight': 60,
-        'export': generatePlotExportDescriptor(graphExporter.xicGraphId),
+        'export': generatePlotExportDescriptor(graphExporter.xicChartId),
         'responsive': {
             'enabled': true
         },
@@ -436,11 +461,11 @@ function createXicChart(div_id, dataProvider, graphs, guides) {
     });
 }
 
-document.getElementById('xic_div').addEventListener('click', function (event) {
+document.getElementById('xic_container').addEventListener('click', function (event) {
     xicGraphSelectionState.deselect(event);
 });
 
-function createMassPeakChart(div_id, dataProvider, graphs) {
+function createMassPeakChart(div_id, dataProvider, graphs, createSeparateLegend) {
     var result = AmCharts.makeChart(div_id, {
         'type': 'xy',
         'marginLeft': 60,
@@ -450,10 +475,14 @@ function createMassPeakChart(div_id, dataProvider, graphs) {
         'startDuration': 0.1,
         'dataProvider': dataProvider,
         'graphs': graphs,
+        'maxZoomFactor': 10000,
         'chartScrollbar': generatePlotScrollbarDescriptor(),
         'chartCursor': {
             'valueLineAxis': 'y',
             'valueLineBalloonEnabled': true,
+        },
+        'legend': {
+            'enabled': createSeparateLegend
         },
         'valueAxes': [{
             'id': 'x',
@@ -466,7 +495,7 @@ function createMassPeakChart(div_id, dataProvider, graphs) {
             'position': 'left',
             'title': 'Intensity [number of ions]'
         }],
-        'export': generatePlotExportDescriptor(graphExporter.massPeakGraphId),
+        'export': generatePlotExportDescriptor(graphExporter.massPeakChartId),
         'responsive': {
             'enabled': true
         }
@@ -474,15 +503,15 @@ function createMassPeakChart(div_id, dataProvider, graphs) {
     return result;
 }
 
-function updateMassChartData(graphDescriptors, points) {
+function updateMassChartData(graphDescriptors, points, createSeparateLegend) {
     var massGraphs = getGraphs(graphDescriptors, points, generateMassGraphProto, 0.5, true, massPointAttributeSetter);
 
-    var massPeakChart = chartsById[graphExporter.massPeakGraphId];
+    var massPeakChart = chartsById[graphExporter.massPeakChartId];
     if (null !== massPeakChart) {
         massPeakChart.clear();
     }
 
-    chartsById[graphExporter.massPeakGraphId] = createMassPeakChart('mass_peak_div', points, massGraphs);
+    chartsById[graphExporter.massPeakChartId] = createMassPeakChart('mass_peak_container', points, massGraphs, createSeparateLegend);
 }
 
 function updateChartData(data) {
@@ -491,13 +520,13 @@ function updateChartData(data) {
 
     var xicGraphs = getGraphs(data[dataController.xicGraphDescKey], data[dataController.xicGraphDataKey], generateXicGraphProto, 0, false, xicPointAttributeSetter);
 
-    var xicChart = chartsById[graphExporter.xicGraphId];
+    var xicChart = chartsById[graphExporter.xicChartId];
     if (null !== xicChart) {
         xicChart.clear();
     }
-    chartsById[graphExporter.xicGraphId] = createXicChart('xic_div', data[dataController.xicGraphDataKey], xicGraphs, createXicGuides(xicGraphs, data[dataController.xicGraphDescKey]));
+    chartsById[graphExporter.xicChartId] = createXicChart('xic_container', data[dataController.xicGraphDataKey], xicGraphs, createXicGuides(xicGraphs, data[dataController.xicGraphDescKey]));
 
-    updateMassChartData(data[dataController.ms1GraphDescKey], data[dataController.ms1GraphDataKey]);
+    updateMassChartData(data[dataController.ms1GraphDescKey], data[dataController.ms1GraphDataKey], false);
 }
 
 dataController.updatePlot.connect(this, updateChartData);

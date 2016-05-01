@@ -16,16 +16,16 @@ class GraphExporter : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(GraphId xicGraphId READ getXicGraphId)
-    Q_PROPERTY(GraphId massPeakGraphId READ getMassPeakGraphId)
+    Q_PROPERTY(GraphId xicChartId READ getXicChartId)
+    Q_PROPERTY(GraphId massPeakChartId READ getMassPeakChartId)
     Q_PROPERTY(QVariantList supportedImageFormatIds READ getSupportedImageFormatIds)
     Q_PROPERTY(QVariantList supportedDataFormatIds READ getSupportedDataFormatIds)
 
 public:
     explicit GraphExporter(QWebView *graphView = NULL);
 
-    GraphId getXicGraphId() const;
-    GraphId getMassPeakGraphId() const;
+    GraphId getXicChartId() const;
+    GraphId getMassPeakChartId() const;
 
     QVariantList getSupportedImageFormatIds() const;
     QVariantList getSupportedDataFormatIds() const;

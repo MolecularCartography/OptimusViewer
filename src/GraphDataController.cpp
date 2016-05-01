@@ -58,6 +58,7 @@ void GraphDataController::addMs2ScanPointToGraph(const QPointF &prevXicPoint, co
             variantPlotData[graphDescription.getXField()] = ms2Point->scanTime;
             variantPlotData[graphDescription.getYField()] = prevXicPoint.y() + intensityDelta;
             variantPlotData[getPrecursorMzKey()] = ms2Point->precursorMz;
+            variantPlotData[getSpectrumIdKey()] = ms2Point->spectrumId;
             variantPlotData[getScanIdKey()] = ms2Point->scanId;
             variantPlotData[getGraphIdKey()] = graphDescription.graphId;
 
@@ -186,6 +187,11 @@ QString GraphDataController::getGraphIdKey() const
 QString GraphDataController::getPrecursorMzKey() const
 {
     return "precursor_mz";
+}
+
+QString GraphDataController::getSpectrumIdKey() const
+{
+    return "spectrum_id";
 }
 
 QString GraphDataController::getScanIdKey() const
