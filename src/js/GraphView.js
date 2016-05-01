@@ -394,7 +394,7 @@ function toggleAllGraphs(item, action) {
                 chartGuides[item.dataItem.index].fillAlpha = 0.1;
             }
             chart.validateData();
-        } else if (chart.graphs[item.dataItem.index]['title'] === item.chart[item.dataItem.index]['title']) {
+        } else if (chart.graphs[item.dataItem.index]['title'] === item.chart.graphs[item.dataItem.index]['title']) {
             if (action == 'hide') {
                 chart.hideGraph(chart.graphs[item.dataItem.index]);
             } else {
@@ -500,6 +500,18 @@ function createMassPeakChart(div_id, dataProvider, graphs, createSeparateLegend)
             'enabled': true
         }
     });
+    if (!createSeparateLegend) { // sync hidden graphs
+        var xicGraphs = chartsById[graphExporter.xicChartId].graphs;
+        var massPeakGraphs = result.graphs;
+        if (massPeakGraphs.length !== xicGraphs.length || xicGraphs[0]['title'] !== massPeakGraphs[0]['title']) {
+            return;
+        }
+        for (var i = 0; i < xicGraphs.length; ++i) {
+            if (xicGraphs[i].hidden) {
+                result.hideGraph(massPeakGraphs[i]);
+            }
+        }
+    }
     return result;
 }
 
