@@ -148,7 +148,11 @@ void GraphExporter::saveGraphAsCsv(const GraphId &id, const QString &path, const
         Q_ASSERT(false);
     }
     QMap<QString, int> columnNumberByName;
-    foreach (const QVariant &varPoint, graphPoints) {
+    QVariantList graphPointsSortedByX = graphPoints;
+    std::sort(graphPointsSortedByX.begin(), graphPointsSortedByX.end(),
+        [](const QVariant &first, const QVariant &second) { return first.toMap()["x"].toReal() < second.toMap()["x"].toReal(); });
+
+    foreach (const QVariant &varPoint, graphPointsSortedByX) {
         const QVariantMap mapPoint = varPoint.toMap();
         const QString yField = mapPoint["y"].toString();
 
@@ -157,7 +161,7 @@ void GraphExporter::saveGraphAsCsv(const GraphId &id, const QString &path, const
         }
     }
 
-    QList<QStringList> resultTable = CsvWritingUtils::createEmptyTable(graphPoints.length() + 1, numberOfNextValueColumn);
+    QList<QStringList> resultTable = CsvWritingUtils::createEmptyTable(graphPointsSortedByX.length() + 1, numberOfNextValueColumn);
     resultTable[0][0] = xFieldColumnName;
     for (int i = 1; i < numberOfNextValueColumn; ++i) {
         QString columnName = columnNumberByName.key(i);
@@ -166,15 +170,15 @@ void GraphExporter::saveGraphAsCsv(const GraphId &id, const QString &path, const
         }
         resultTable[0][i] = columnName;
     }
+
     QMap<QString, int> rowNumberByXValue;
     int currentRow = 0;
-    foreach (const QVariant &varPoint, graphPoints) {
+    foreach (const QVariant &varPoint, graphPointsSortedByX) {
         const QVariantMap mapPoint = varPoint.toMap();
-        const QString xField = mapPoint["x"].toString();
         const QString yField = mapPoint["y"].toString();
         const int columnNumber = columnNumberByName[yField];
 
-        const QString xValue = mapPoint[xField].toString();
+        const QString xValue = mapPoint["x"].toString();
 
         int row = -1;
         if (!rowNumberByXValue.contains(xValue)) {

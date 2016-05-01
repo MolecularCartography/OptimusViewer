@@ -18,55 +18,44 @@ function clone(obj) {
     return copy;
 }
 
-function getCoordinates(chart) {
-    var xCoordKeys = [];
-    var yCoordKeys = [];
-    for (var i = 0; i < chart.graphs.length; ++i) {
-        var graph = chart.graphs[i];
-        if (!graph.hidden) {
-            xCoordKeys.push(graph.xField);
-            yCoordKeys.push(graph.yField);
-        }
-    }
+function getCoordinates(chartId) {
+    var chart = chartsById[chartId];
+    var graphDescriptorsKey = chartId === graphExporter.xicChartId ? dataController.xicGraphDescKey :
+        xicGraphSelectionState._selectionActive ? dataController.msnGraphDescKey : dataController.ms1GraphDescKey;
+    var graphDescriptors = actualPlotData[graphDescriptorsKey];
 
     var resultPoints = [];
     for (var i = 0; i < chart.dataProvider.length; ++i) {
         var originalPoint = chart.dataProvider[i];
+        var currentGraph = chart.getGraphById(originalPoint[dataController.graphIdKey]);
         var resultPoint = {};
-        if (auxPointFlag in originalPoint) {
+        if (auxPointFlag in originalPoint || currentGraph.hidden) {
             continue;
         }
-        for (var key in originalPoint) {
-            if (xCoordKeys.indexOf(key) != -1) {
-                resultPoint['x'] = key;
-                resultPoint[key] = originalPoint[key];
-            } else if (yCoordKeys.indexOf(key) != -1) {
-                var delimeter = '; ';
-                var re = new RegExp('<br>', 'g');
-                var yFieldName = key.replace(re, delimeter);
-                if (yFieldName.substr(yFieldName.length - delimeter.length) == delimeter) {
-                    yFieldName = yFieldName.slice(0, -delimeter.length);
-                }
-                if (dataController.precursorMzKey in originalPoint) {
-                    yFieldName = ('Precursor m/z: ' + originalPoint[dataController.precursorMzKey].toString()).concat(delimeter, yFieldName);
-                }
-                resultPoint['y'] = yFieldName;
-                resultPoint[yFieldName] = originalPoint[key];
-            }
-        }
+
+        var graphId = originalPoint[dataController.graphIdKey];
+
+        var xKey = graphDescriptors[graphId][dataController.xFieldKey];
+        resultPoint['x'] = originalPoint[xKey];
+
+        var yKey = graphDescriptors[graphId][dataController.yFieldKey];
+        var graphName = currentGraph['title'].replace('<br>', '; ');
+        resultPoint['y'] = graphName;
+        resultPoint[graphName] = originalPoint[yKey];
+
         resultPoints.push(resultPoint);
     }
     return resultPoints;
 }
 
-function generateFormatListMenu(graphId, formats) {
+function generateFormatListMenu(chartId, formats) {
     var menuItems = [];
     for (var i = 0; i < formats.length; ++i) {
         var formatId = formats[i];
         var menuItem = {
             'label': formatId,
             'click': function (event, menuItem) {
-                var chart = chartsById[graphId];
+                var chart = chartsById[chartId];
 
                 // seems that chart.chartCursor.enabled property doesn't work so we play with alpha of cursor
                 // TODO: check the property with future versions of amCharts
@@ -81,7 +70,7 @@ function generateFormatListMenu(graphId, formats) {
                 chart.chartScrollbar.enabled = false;
                 chart.validateData();
 
-                graphExporter.exportGraph(graphId, menuItem.label, getCoordinates(chart));
+                graphExporter.exportGraph(chartId, menuItem.label, getCoordinates(chartId));
 
                 chart.chartScrollbar.enabled = true;
                 chart.chartCursor.cursorAlpha = cursorAlpha;
@@ -274,6 +263,9 @@ var xicGraphSelectionState = {
             this._selectedCharts = [];
             this._selectionActive = false;
 
+            delete actualPlotData[dataController.msnGraphDescKey];
+            delete actualPlotData[dataController.msnGraphDataKey];
+
             updateMassChartData(actualPlotData[dataController.ms1GraphDescKey], actualPlotData[dataController.ms1GraphDataKey], false);
         }
     },
@@ -357,6 +349,8 @@ var xicGraphSelectionState = {
             graphDescriptors[graphId][dataController.sampleNameGraphKey]
                 = actualPlotData[dataController.xicGraphDescKey][xicPoint[dataController.graphIdKey]][dataController.sampleNameGraphKey];
         }
+        actualPlotData[dataController.msnGraphDescKey] = graphDescriptors;
+        actualPlotData[dataController.msnGraphDataKey] = graphData[dataController.msnGraphDataKey];
         updateMassChartData(graphDescriptors, graphData[dataController.msnGraphDataKey], true);
     }
 };
@@ -381,31 +375,55 @@ function createXicGuides(graphs, graphDescriptors) {
     return guides;
 }
 
-function toggleAllGraphs(item, action) {
+function getCountOfVisibleGraphs(chart) {
+    var visibleCount = 0;
+    for (var i = 0; i < chart.graphs.length; ++i) {
+        if (!chart.graphs[i].hidden) {
+            visibleCount++;
+        }
+    }
+    return visibleCount;
+}
+
+function handleXicLegendClick(graph) {
+    var chart = graph.chart;
+    var actionHide = !graph.hidden;
+    if (actionHide && getCountOfVisibleGraphs(chart) < 2) {
+        return false;
+    }
+
+    var graphIndex = chart.graphs.indexOf(graph);
+    if (-1 === graphIndex) {
+        throw 'Internal error: couldn\'t find graph in chart';
+    }
+
     for (var chartId in chartsById) {
-        var chart = chartsById[chartId];
-        if (chart == item.chart) {
-            var chartGuides = chart['valueAxes'][0]['guides'];
-            if (action == 'hide') {
-                chartGuides[item.dataItem.index].lineAlpha = 0;
-                chartGuides[item.dataItem.index].fillAlpha = 0;
+        var curChart = chartsById[chartId];
+        if (curChart == chart) {
+            var chartGuides = curChart['valueAxes'][0]['guides'];
+            if (actionHide) {
+                curChart.hideGraph(graph);
+                chartGuides[graphIndex].lineAlpha = 0;
+                chartGuides[graphIndex].fillAlpha = 0;
             } else {
-                chartGuides[item.dataItem.index].lineAlpha = 1;
-                chartGuides[item.dataItem.index].fillAlpha = 0.1;
+                curChart.showGraph(graph);
+                chartGuides[graphIndex].lineAlpha = 1;
+                chartGuides[graphIndex].fillAlpha = 0.1;
             }
-            chart.validateData();
-        } else if (chart.graphs[item.dataItem.index]['title'] === item.chart.graphs[item.dataItem.index]['title']) {
-            if (action == 'hide') {
-                chart.hideGraph(chart.graphs[item.dataItem.index]);
+            curChart.validateData();
+        } else if (curChart.graphs[graphIndex]['title'] === graph['title']) {
+            if (actionHide) {
+                curChart.hideGraph(curChart.graphs[graphIndex]);
             } else {
-                chart.showGraph(chart.graphs[item.dataItem.index]);
+                curChart.showGraph(curChart.graphs[graphIndex]);
             }
         }
     }
+    return false;
 }
 
 function createXicChart(div_id, dataProvider, graphs, guides) {
-    return AmCharts.makeChart(div_id, {
+    var result = AmCharts.makeChart(div_id, {
         'type': 'xy',
         'theme': 'light',
         'autoMarginOffset': 20,
@@ -416,17 +434,9 @@ function createXicChart(div_id, dataProvider, graphs, guides) {
         'legend': {
             'divId': 'legend_container',
             'align': 'center',
-            'listeners': [{
-                'event': 'hideItem',
-                'method': function (item) {
-                    toggleAllGraphs(item, 'hide');
-                }
-            }, {
-                'event': 'showItem',
-                'method': function (item) {
-                    toggleAllGraphs(item, 'show');
-                }
-            }]
+            'switchable': graphs.length > 1,
+            'clickMarker': handleXicLegendClick,
+            'clickLabel': handleXicLegendClick
         },
         'valueAxes': [{
             'id': 'x',
@@ -459,11 +469,26 @@ function createXicChart(div_id, dataProvider, graphs, guides) {
             }
         }]
     });
+    return result;
 }
 
 document.getElementById('xic_container').addEventListener('click', function (event) {
     xicGraphSelectionState.deselect(event);
 });
+
+function handleMassPeakLegendClick(graph) {
+    var chart = graph.chart;
+    var actionHide = !graph.hidden;
+    if (actionHide && getCountOfVisibleGraphs(chart) < 2) {
+        return false;
+    }
+    if (actionHide) {
+        chart.hideGraph(graph);
+    } else {
+        chart.showGraph(graph);
+    }
+    return false;
+}
 
 function createMassPeakChart(div_id, dataProvider, graphs, createSeparateLegend) {
     var result = AmCharts.makeChart(div_id, {
@@ -482,7 +507,10 @@ function createMassPeakChart(div_id, dataProvider, graphs, createSeparateLegend)
             'valueLineBalloonEnabled': true,
         },
         'legend': {
-            'enabled': createSeparateLegend
+            'enabled': createSeparateLegend,
+            'switchable': graphs.length > 1,
+            'clickMarker': handleMassPeakLegendClick,
+            'clickLabel': handleMassPeakLegendClick
         },
         'valueAxes': [{
             'id': 'x',
