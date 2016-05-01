@@ -448,56 +448,6 @@ function handleXicLegendClick(graph) {
     return false;
 }
 
-var legendHoverState = {
-    _graphPrevAlphas: [],
-    _affectedCharts: [],
-
-    rollOver: function(graph) {
-        var charts = [chartsById[graphExporter.xicChartId]];
-        if (!xicGraphSelectionState._selectionActive) {
-            charts.push(chartsById[graphExporter.massPeakChartId]);
-        }
-        for (var c = 0; c < charts.length; ++c) {
-            for (var i = 0; i < charts[c].graphs.length; ++i) {
-                var curGraph = charts[c].graphs[i];
-                this._graphPrevAlphas.push({
-                    'graph': curGraph,
-                    'fillAlphas': curGraph['fillAlphas'],
-                    'lineAlpha': curGraph['lineAlpha'],
-                    'bulletAlpha': curGraph['bulletAlpha'],
-                    'bulletBorderAlpha': curGraph['bulletBorderAlpha']
-                });
-                if (curGraph[graphTitleKey] != graph[graphTitleKey]) {
-                    curGraph.fillAlphas = 0.1;
-                    curGraph.lineAlpha = 0.1;
-                    curGraph.bulletAlpha = 0.1;
-                    curGraph.bulletBorderAlpha = 0.1;
-                } else {
-                    curGraph.fillAlphas = 1;
-                    curGraph.lineAlpha = 1;
-                    curGraph.bulletAlpha = 1;
-                    curGraph.bulletBorderAlpha = 1;
-                }
-            }
-            this._affectedCharts.push(charts[c]);
-            charts[c].validateData();
-        }
-    },
-    rollOut: function() {
-        for (var i = 0; i < this._graphPrevAlphas.length; ++i) {
-            this._graphPrevAlphas[i]['graph'].fillAlphas = this._graphPrevAlphas[i]['fillAlphas'];
-            this._graphPrevAlphas[i]['graph'].lineAlpha = this._graphPrevAlphas[i]['lineAlpha'];
-            this._graphPrevAlphas[i]['graph'].bulletAlpha = this._graphPrevAlphas[i]['bulletAlpha'];
-            this._graphPrevAlphas[i]['graph'].bulletBorderAlpha = this._graphPrevAlphas[i]['bulletBorderAlpha'];
-        }
-        this._graphPrevAlphas = [];
-        for (var c = 0; c < this._affectedCharts.length; ++c) {
-            this._affectedCharts[c].validateData();
-        }
-        this._affectedCharts = [];
-    }
-};
-
 function createXicChart(div_id, dataProvider, graphs, guides) {
     var result = AmCharts.makeChart(div_id, {
         'type': 'xy',
@@ -512,19 +462,7 @@ function createXicChart(div_id, dataProvider, graphs, guides) {
             'align': 'center',
             'switchable': graphs.length > 1,
             'clickMarker': handleXicLegendClick,
-            'clickLabel': handleXicLegendClick /*,
-            TODO: come up with a better implementation of graph highlighting
-            'listeners': [{
-                'event': 'rollOverItem',
-                'method': function (event) {
-                    legendHoverState.rollOver(event.chart.graphs[event.dataItem.index]);
-                }
-            }, {
-                'event': 'rollOutItem',
-                'method': function (event) {
-                    legendHoverState.rollOut();
-                }
-            }]*/
+            'clickLabel': handleXicLegendClick
         },
         'valueAxes': [{
             'id': 'x',
