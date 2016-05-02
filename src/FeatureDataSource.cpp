@@ -25,7 +25,7 @@ QMultiHash<SampleId, FeatureId> FeatureDataSource::getFeaturesToExtract(const QM
     QHash<SampleId, QHash<FeatureId, FeatureData> > &presentFeatures, QHash<SampleId, QHash<FeatureId, QList<Ms2ScanInfo> > > &presentMs2Scans)
 {
     QMultiHash<SampleId, FeatureId> featuresToExtract;
-    foreach(const SampleId &sampleId, featuresBySample.keys()) {
+    foreach(const SampleId &sampleId, featuresBySample.uniqueKeys()) {
         foreach(const FeatureId &featureId, featuresBySample.values(sampleId)) {
             if (currentFeatures.contains(sampleId) && currentFeatures[sampleId].contains(featureId)) {
                 presentFeatures[sampleId].insert(featureId, currentFeatures[sampleId][featureId]);
@@ -47,7 +47,7 @@ void FeatureDataSource::fetchFeatures(const QMultiHash<SampleId, FeatureId> &fea
     QString queryStr = "SELECT sample_id, feature_id, data, rt_start, rt_end FROM FeatureMassTrace WHERE ";
     QVariantList bindParameters;
     const QString queryConjunction = " OR ";
-    foreach(const SampleId &sampleId, featureIdsToExtract.keys()) {
+    foreach(const SampleId &sampleId, featureIdsToExtract.uniqueKeys()) {
         foreach(const FeatureId &featureId, featureIdsToExtract.values(sampleId)) {
             queryStr.append("(sample_id = ? AND feature_id = ?)");
             bindParameters.append(sampleId);
@@ -108,7 +108,7 @@ void FeatureDataSource::fetchMs2Scans(const QMultiHash<SampleId, FeatureId> &fea
         "MassTraceFragmentationSpectrum AS MSFS, FragmentationSpectrum AS FS WHERE FMT.id = MSFS.mt_id AND MSFS.spectrum_id = FS.id AND (";
     QVariantList bindParameters;
     const QString queryConjunction = " OR ";
-    foreach(const SampleId &sampleId, featuresToExtract.keys()) {
+    foreach(const SampleId &sampleId, featuresToExtract.uniqueKeys()) {
         foreach(const FeatureId &featureId, featuresToExtract.values(sampleId)) {
             queryStr.append("(FMT.sample_id = ? AND FMT.feature_id = ?)");
             bindParameters.append(sampleId);
