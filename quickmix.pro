@@ -1,4 +1,4 @@
-include (ov.pri)
+include (quickmix.pri)
 
 HEADERS += src/AppController.h \
            src/AppView.h \
@@ -41,5 +41,4 @@ SOURCES += src/AppController.cpp \
            src/ProgressIndicator.cpp \
            src/SaveGraphDialog.cpp
 
-RESOURCES += ov.qrc
-
+RESOURCES += quickmix.qrc

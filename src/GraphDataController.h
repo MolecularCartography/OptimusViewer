@@ -7,7 +7,7 @@
 
 #include "Ms2ScanInfo.h"
 
-namespace ov {
+namespace qm {
 
 class FeatureDataSource;
 struct Ms1GraphDescriptor;
@@ -87,6 +87,6 @@ private:
     FeatureDataSource *dataSource;
 };
 
-} // namespace ov
+} // namespace qm
 
 #endif // GRAPHDATACONTROLLER_H

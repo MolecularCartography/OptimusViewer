@@ -2,7 +2,7 @@
 
 #include "ProgressIndicator.h"
 
-namespace ov {
+namespace qm {
 
 ProgressIndicator::ProgressIndicator(QWidget *parent)
     : QDialog(parent), ui(new Ui::ProgressIndicatorUi)
@@ -27,4 +27,4 @@ void ProgressIndicator::finished()
     hide();
 }
 
-} // namespace ov
+} // namespace qm

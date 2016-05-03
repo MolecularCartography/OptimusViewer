@@ -1,6 +1,6 @@
 #include "Globals.h"
 
-namespace ov {
+namespace qm {
 
 namespace GraphIds {
 

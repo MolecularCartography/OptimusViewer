@@ -12,7 +12,7 @@ class FeatureTableVisibilityDialogUi;
 
 }
 
-namespace ov {
+namespace qm {
 
 class FeatureTableVisibilityDialog : public QDialog
 {
@@ -41,6 +41,6 @@ private:
     Ui::FeatureTableVisibilityDialogUi *ui;
 };
 
-} // namespace ov
+} // namespace qm
 
 #endif // FEATURETABLEVISIBILITYDIALOG_H

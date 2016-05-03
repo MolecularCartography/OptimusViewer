@@ -2,7 +2,7 @@
 
 #include "FeatureData.h"
 
-namespace ov {
+namespace qm {
 
 FeatureData::FeatureData()
     : sampleId(-1), featureId(-1), featureStart(-1), featureEnd(-1)
@@ -52,4 +52,4 @@ QList<QPointF> FeatureData::getMassPeaks() const
     return projectMassTraces2D(massTraces, [](const QVector3D &p) { return QPointF(p.x(), p.z()); });
 }
 
-} // namespace ov
+} // namespace qm

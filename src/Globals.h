@@ -3,7 +3,7 @@
 
 #include <QStringList>
 
-namespace ov {
+namespace qm {
 
 typedef qint64 SampleId;
 typedef QString DataSourceId;
@@ -30,6 +30,6 @@ extern const QList<FormatId> dataFormats;
 
 }
 
-} // namespace ov
+} // namespace qm
 
 #endif // GLOBALS_H

@@ -12,7 +12,7 @@
 
 #include "GraphExporter.h"
 
-namespace ov {
+namespace qm {
 
 const QList<FormatId> GraphExporter::supportedImageFormatIds = QStringList() << ExportFormats::lossyImageFormats
     << ExportFormats::losslessImageFormats << ExportFormats::vectorImageFormats;
@@ -105,8 +105,8 @@ void GraphExporter::saveGraphAsSvg(const GraphId &id, const QString &path, doubl
     generator.setFileName(path);
     generator.setSize(graphElement.geometry().size());
 
-    generator.setTitle(tr("OptimusViewer SVG Generator"));
-    generator.setDescription(tr("An image of a plot created by OptimusViewer software, LC-MS data visualization tool."));
+    generator.setTitle(tr("Quickmix SVG Generator"));
+    generator.setDescription(tr("An image of a plot created by Quickmix software, LC-MS data visualization tool."));
 
     QPainter painter(&generator);
     painter.scale(scale, scale);
@@ -231,4 +231,4 @@ void GraphExporter::exportGraph(const QString &graphId, const FormatId &initialF
 }
 
 
-} // namespace ov
+} // namespace qm

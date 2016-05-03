@@ -6,7 +6,7 @@
 
 #include "Globals.h"
 
-namespace ov {
+namespace qm {
 
 struct FeatureData {
     FeatureData();
@@ -23,6 +23,6 @@ struct FeatureData {
     qreal featureEnd;
 };
 
-} // namespace ov
+} // namespace qm
 
 #endif // FEATURE_DATA_H

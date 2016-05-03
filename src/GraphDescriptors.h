@@ -3,7 +3,7 @@
 
 #include "Globals.h"
 
-namespace ov {
+namespace qm {
 
 //////////////////////////////////////////////////////////////////////////
 /// BaseGraphDescriptor
@@ -56,6 +56,6 @@ struct MsnGraphDescriptor: public BaseGraphDescriptor
     const FragmentationSpectrumId specId;
 };
 
-} // namespace ov
+} // namespace qm
 
 #endif // GRAPH_DESCRIPTORS_H

@@ -10,7 +10,7 @@
 #include "FeatureData.h"
 #include "Ms2ScanInfo.h"
 
-namespace ov {
+namespace qm {
 
 class FeatureDataSource: public QObject
 {
@@ -61,6 +61,6 @@ private:
     QSqlDatabase db;
 };
 
-} // namespace ov
+} // namespace qm
 
 #endif // FEATUREDATASOURCE_H

@@ -1,6 +1,6 @@
 #include "GraphPoint.h"
 
-namespace ov {
+namespace qm {
 
 GraphPoint::GraphPoint(const SampleId &sampleId, const FeatureId &featureId, qreal x, qreal y, const QMap<GraphPoint::Attribute, QVariant> &attrs)
     : QPointF(x, y), sampleId(sampleId), featureId(featureId), attrs(attrs)
@@ -28,4 +28,4 @@ QVariant GraphPoint::getAttribute(GraphPoint::Attribute attr) const
     return attrs.value(attr);
 }
 
-} // namespace ov
+} // namespace qm

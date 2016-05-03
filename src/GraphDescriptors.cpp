@@ -1,6 +1,6 @@
 #include "GraphDescriptors.h"
 
-namespace ov {
+namespace qm {
 
 //////////////////////////////////////////////////////////////////////////
 /// BaseGraphDescriptor
@@ -52,4 +52,4 @@ MsnGraphDescriptor::MsnGraphDescriptor(const FragmentationSpectrumId &specId)
 
 }
 
-} // namespace ov
+} // namespace qm

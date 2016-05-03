@@ -7,7 +7,7 @@
 
 #include "Globals.h"
 
-namespace ov {
+namespace qm {
 
 class FeatureDataSource;
 
@@ -62,6 +62,6 @@ private:
     QSqlError error;
 };
 
-} // namespace ov
+} // namespace qm
 
 #endif // FEATURE_TABLE_MODEL_H

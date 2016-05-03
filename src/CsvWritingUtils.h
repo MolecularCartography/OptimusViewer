@@ -3,7 +3,7 @@
 
 #include <QStringList>
 
-namespace ov {
+namespace qm {
 
 namespace CsvWritingUtils {
 
@@ -13,6 +13,6 @@ bool saveTableToFile(const QList<QStringList> &table, const QString &path);
 
 } // namespace CsvWritingUtils
 
-} // namespace ov
+} // namespace qm
 
 #endif // CSV_WRITING_UTILS_H

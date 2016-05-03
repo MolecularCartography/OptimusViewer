@@ -11,7 +11,7 @@
 
 #include "GraphDataController.h"
 
-namespace ov {
+namespace qm {
 
 GraphDataController::GraphDataController(FeatureDataSource *dataSource)
     : dataSource(dataSource)
@@ -260,4 +260,4 @@ void GraphDataController::samplesChanged()
     emit updatePlot(emptyData);
 }
 
-} // namespace ov
+} // namespace qm

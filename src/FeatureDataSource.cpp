@@ -9,7 +9,7 @@
 
 const int QUERY_PARAMS_LIMIT = 999;
 
-namespace ov {
+namespace qm {
 
 FeatureDataSource::FeatureDataSource()
 {
@@ -330,4 +330,4 @@ QString FeatureDataSource::getInputFileFilter()
     return QObject::tr("Optimus database (*.db)");
 }
 
-} // namespace ov
+} // namespace qm

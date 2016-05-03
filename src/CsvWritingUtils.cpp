@@ -3,7 +3,7 @@
 
 #include "CsvWritingUtils.h"
 
-namespace ov {
+namespace qm {
 
 namespace CsvWritingUtils {
 
@@ -47,4 +47,4 @@ bool CsvWritingUtils::saveTableToFile(const QList<QStringList> &table, const QSt
 
 } // namespace CsvWritingUtils
 
-} // namespace ov
+} // namespace qm

@@ -3,7 +3,7 @@
 
 #include "Globals.h"
 
-namespace ov {
+namespace qm {
 
 struct Ms2ScanInfo {
     Ms2ScanInfo(qreal scanTime, qreal precursorMz, const FragmentationSpectrumId &spectrumId, const QString &scanId);
@@ -14,6 +14,6 @@ struct Ms2ScanInfo {
     const QString scanId;
 };
 
-} // namespace ov
+} // namespace qm
 
 #endif // MS2_SCAN_INFO_H

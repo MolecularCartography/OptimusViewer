@@ -6,7 +6,7 @@
 
 #include "Globals.h"
 
-namespace ov {
+namespace qm {
 
 class GraphPoint: public QPointF
 {
@@ -31,6 +31,6 @@ private:
     QMap<Attribute, QVariant> attrs;
 };
 
-} // namespace ov
+} // namespace qm
 
 #endif // GRAPHPOINT_H

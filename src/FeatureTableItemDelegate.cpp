@@ -2,7 +2,7 @@
 
 #include "FeatureTableItemDelegate.h"
 
-namespace ov {
+namespace qm {
 
 FeatureTableItemDelegate::FeatureTableItemDelegate(QAbstractItemView *view)
     : QStyledItemDelegate(view), view(view)
@@ -17,4 +17,4 @@ void FeatureTableItemDelegate::paint(QPainter *painter, const QStyleOptionViewIt
     }
 }
 
-} // namespace ov
+} // namespace qm

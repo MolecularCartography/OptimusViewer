@@ -5,7 +5,7 @@
 
 #include "SaveGraphDialog.h"
 
-namespace ov {
+namespace qm {
 
 SaveGraphDialog::SaveGraphDialog(QWidget *parent, const FormatId &selectedFormat)
     : QFileDialog(parent, tr("Save File")), selectedScale(1), selectedQuality(100)
@@ -148,4 +148,4 @@ void SaveGraphDialog::filterSelected(const QString &filter)
     }
 }
 
-} // namespace ov
+} // namespace qm

@@ -5,7 +5,7 @@
 
 #include "AppController.h"
 
-namespace ov {
+namespace qm {
 
 bool AppController::staticInitializationDone = false;
 
@@ -74,4 +74,4 @@ void AppController::graphViewAboutToLoad(QWebView *view)
     connect(view->page()->mainFrame(), &QWebFrame::javaScriptWindowObjectCleared, this, &AppController::graphDataControllerRequested);
 }
 
-} // namespace ov
+} // namespace qm

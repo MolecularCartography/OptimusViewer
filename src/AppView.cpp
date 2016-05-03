@@ -16,7 +16,7 @@
 
 #include "AppView.h"
 
-namespace ov {
+namespace qm {
 
 AppView::AppView(QWidget *parent)
     : QMainWindow(parent), graphViewInited(false), hideColumnAction(NULL), showHideColumnsAction(NULL), lastReferredLogicalColumn(-1),
@@ -244,4 +244,4 @@ void AppView::setFeatureTableIndexWidget(const QModelIndex &index, QWidget *w)
     ui->featureTableView->setIndexWidget(proxyModel->mapFromSource(index), w);
 }
 
-} // namespace ov
+} // namespace qm

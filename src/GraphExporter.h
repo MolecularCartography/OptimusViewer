@@ -10,7 +10,7 @@
 
 class QWebView;
 
-namespace ov {
+namespace qm {
 
 class GraphExporter : public QObject
 {
@@ -50,6 +50,6 @@ private:
     static const QList<FormatId> supportedDataFormatIds;
 };
 
-} // namespace ov
+} // namespace qm
 
 #endif // GRAPHEXPORTER_H

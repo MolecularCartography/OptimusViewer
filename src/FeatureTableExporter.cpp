@@ -7,7 +7,7 @@
 
 #include "FeatureTableExporter.h"
 
-namespace ov {
+namespace qm {
 
 FeatureTableExporter::FeatureTableExporter(const FeatureTableModel &model)
     : model(model)
@@ -42,4 +42,4 @@ void FeatureTableExporter::exportFeatures(const QVector<int> &visibleColumns)
     }
 }
 
-} // namespace ov
+} // namespace qm

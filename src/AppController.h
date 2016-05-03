@@ -10,7 +10,7 @@
 
 class QWebView;
 
-namespace ov {
+namespace qm {
 
 class AppController : public QObject
 {
@@ -38,6 +38,6 @@ private:
     FeatureTableExporter featureTableExporter;
 };
 
-} // namespace ov
+} // namespace qm
 
 #endif // APPCONTROLLER_H

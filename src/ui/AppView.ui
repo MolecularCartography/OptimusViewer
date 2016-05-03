@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>OptimusViewer</string>
+   <string>Quickmix</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -139,7 +139,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../../ov.qrc"/>
+  <include location="../../quickmix.qrc"/>
  </resources>
  <connections/>
 </ui>

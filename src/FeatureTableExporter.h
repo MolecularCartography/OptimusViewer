@@ -3,7 +3,7 @@
 
 #include <QObject>
 
-namespace ov {
+namespace qm {
 
 class FeatureTableModel;
 
@@ -20,6 +20,6 @@ private:
     const FeatureTableModel &model;
 };
 
-} // namespace ov
+} // namespace qm
 
 #endif // FEATURE_TABLE_EXPORTER_H

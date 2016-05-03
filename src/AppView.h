@@ -16,7 +16,7 @@ class AppViewUi;
 
 }
 
-namespace ov {
+namespace qm {
 
 class FeatureTableModel;
 
@@ -69,6 +69,6 @@ private:
     Ui::AppViewUi *ui;
 };
 
-} // namespace ov
+} // namespace qm
 
 #endif // APPVIEW_H

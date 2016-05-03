@@ -6,7 +6,7 @@
 
 #include "Globals.h"
 
-namespace ov {
+namespace qm {
 
 class SaveGraphDialog : public QFileDialog
 {
@@ -36,6 +36,6 @@ private:
     QList<QWidget *> scaleControllers;
 };
 
-} // namespace ov
+} // namespace qm
 
 #endif // SAVEGRAPHDIALOG_H
