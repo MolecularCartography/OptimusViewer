@@ -28,7 +28,12 @@ bool CsvWritingUtils::saveTableToFile(const QList<QStringList> &table, const QSt
     QFile file(path);
     if (file.open(QFile::WriteOnly | QFile::Truncate)) {
         QStringList csvRows;
-        foreach(const QStringList &row, table) {
+        foreach (QStringList row, table) {
+            for (int i = 0; i < row.length(); ++i) {
+                if (row[i].contains(",")) {
+                    row[i] = QString("\"%1\"").arg(row[i]);
+                }
+            }
             csvRows.append(row.join(","));
         }
 

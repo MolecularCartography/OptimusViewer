@@ -6,6 +6,7 @@ HEADERS += src/AppController.h \
            src/FeatureData.h \
            src/FeatureDataSource.h \
            src/FeatureTableExporter.h \
+           src/FeatureTableItemDelegate.h \
            src/FeatureTableModel.h \
            src/FeatureTableVisibilityDialog.h \
            src/Globals.h \
@@ -27,6 +28,7 @@ SOURCES += src/AppController.cpp \
            src/FeatureData.cpp \
            src/FeatureDataSource.cpp \
            src/FeatureTableExporter.cpp \
+           src/FeatureTableItemDelegate.cpp \
            src/FeatureTableModel.cpp \
            src/FeatureTableVisibilityDialog.cpp \
            src/Globals.cpp \

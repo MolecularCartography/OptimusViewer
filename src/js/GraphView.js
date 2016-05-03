@@ -212,7 +212,7 @@ function getGraphs(graphDescriptors, points, graphProtoGenerator, horizontalOffs
 
         // add auxilary ground points at ends of current graph
         var addAuxBefore = stickPlot || curGraphId !== lastGraphId;
-        var addAuxAfter = stickPlot || i === points.length - 1;
+        var addAuxAfter = stickPlot || i === points.length - 1 || points[i + 1][dataController.graphIdKey] !== curGraphId;
 
         var addOffsetBefore = horizontalOffset > 0 && curGraphId !== lastGraphId;
         var addOffsetAfter = horizontalOffset > 0 && i === points.length - 1;
@@ -238,10 +238,10 @@ function getGraphs(graphDescriptors, points, graphProtoGenerator, horizontalOffs
         if (addOffsetBefore) {
             points.splice(i++, 0, createAuxGroundPoint(curPoint, yField, xField, -horizontalOffset));
         }
-        if (addAuxBefore && (i === 0 || !(isAuxPoint(points[i - 1]) && points[i - 1][xField] === curPoint[xField]))) {
+        if (addAuxBefore && (i === 0 || !(isAuxPoint(points[i - 1]) && points[i - 1][xField] === curPoint[xField]))) { // check if auxilary point is already there
             points.splice(i++, 0, createAuxGroundPoint(curPoint, yField, xField, 0));
         }
-        if (addAuxAfter && (i === points.length - 1 || !(isAuxPoint(points[i + 1]) && points[i + 1][xField] === curPoint[xField]))) {
+        if (addAuxAfter && (i === points.length - 1 || !(isAuxPoint(points[i + 1]) && points[i + 1][xField] === curPoint[xField]))) { // check if auxilary point is already there
             points.splice(++i, 0, createAuxGroundPoint(curPoint, yField, xField, 0));
         }
         if (addOffsetAfter) {
@@ -584,7 +584,7 @@ function createMassPeakChart(div_id, dataProvider, graphs, createSeparateLegend)
 }
 
 function updateMassChartData(graphDescriptors, points, createSeparateLegend) {
-    var massGraphs = getGraphs(graphDescriptors, points, generateMassGraphProto, 0.5, true, massPointAttributeSetter);
+    var massGraphs = getGraphs(graphDescriptors, points, generateMassGraphProto, 0.1, true, massPointAttributeSetter);
 
     var massPeakChart = chartsById[graphExporter.massPeakChartId];
     if (null !== massPeakChart) {

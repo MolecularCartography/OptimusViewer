@@ -42,6 +42,7 @@ signals:
 public slots:
     void samplesChanged();
     void resetSelection();
+    void setFeatureTableIndexWidget(const QModelIndex &index, QWidget *w);
 
 private slots:
     void graphViewLoaded(bool ok);

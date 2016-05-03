@@ -1,9 +1,12 @@
+#include <QLabel>
+
 #include "FeatureDataSource.h"
 
 #include "FeatureTableModel.h"
 
 const int DEFAULT_TABLE_SIZE = 0;
-const int SAMPLE_COLUMNS_OFFSET = 4;
+const int SAMPLE_COLUMNS_OFFSET = 5;
+const int ANNOTATION_COLUMN_OFFSET = 4;
 const QVariant TABLE_DEFAULT_VALUE = QVariant("0");
 
 namespace ov {
@@ -39,6 +42,32 @@ void FeatureTableModel::updateFeatureCount()
     }
 }
 
+void FeatureTableModel::updateFeatureAnnotationRows()
+{
+    featureAnnotationRows.clear();
+
+    annotationFetcher = QSqlQuery("SELECT F.id, sub.comp_id, sub.link FROM Feature AS F, FeatureAnnotation AS FA, "
+        "(SELECT A.id AS ann_id, A.compound_id AS comp_id, CWL.web_link AS link "
+        "FROM Annotation AS A "
+        "LEFT OUTER JOIN AnnotationWebLink AS AWL ON AWL.annotation_id = A.id "
+        "LEFT OUTER JOIN CompoundWebLink AS CWL ON AWL.link_id = CWL.id) AS sub "
+        "WHERE FA.feature_id = F.id AND FA.annotation_id = sub.ann_id ORDER BY F.consensus_mz, F.id");
+
+    FeatureId lastFeatureId = -1;
+    qint64 recordNumber = 0;
+    while (annotationFetcher.next()) {
+        const FeatureId curFeatureId = annotationFetcher.value(0).value<FeatureId>();
+        if (curFeatureId != lastFeatureId) {
+            featureAnnotationRows[curFeatureId] = QPair<qint64, int>(recordNumber, 1);
+            lastFeatureId = curFeatureId;
+        } else {
+            featureAnnotationRows[curFeatureId].second++;
+        }
+        recordNumber++;
+    }
+    annotationFetcher.seek(0);
+}
+
 void FeatureTableModel::invalidateCache()
 {
     cachedCells = QVector<QVariant>(rowNumber * columnNumber);
@@ -53,8 +82,10 @@ void FeatureTableModel::reset()
     updateFeatureCount();
     invalidateCache();
 
-    consensusFeatureFetcher = QSqlQuery("SELECT id, consensus_mz, consensus_rt, consensus_charge FROM Feature ORDER BY consensus_mz");
+    consensusFeatureFetcher = QSqlQuery("SELECT id, consensus_mz, consensus_rt, consensus_charge FROM Feature ORDER BY consensus_mz, id");
     intensityFetcher = QSqlQuery("SELECT feature_id, sample_id, intensity FROM SampleFeature ORDER BY feature_id, sample_id");
+
+    updateFeatureAnnotationRows();
 
     endResetModel();
 }
@@ -72,6 +103,15 @@ int FeatureTableModel::columnCount(const QModelIndex &parent) const
 int FeatureTableModel::rowCount(const QModelIndex &parent) const
 {
     return parent.isValid() ? 0 : rowNumber;
+}
+
+Qt::ItemFlags FeatureTableModel::flags(const QModelIndex &index) const
+{
+    Qt::ItemFlags result = QAbstractTableModel::flags(index);
+    if (index.column() < SAMPLE_COLUMNS_OFFSET) {
+        result &= ~Qt::ItemIsEnabled;
+    }
+    return result;
 }
 
 SampleId FeatureTableModel::getSampleIdByColumnNumber(int column) const
@@ -122,6 +162,47 @@ QVariant FeatureTableModel::getCachedValue(int row, int column) const
     return cachedCells[row * columnNumber + column];
 }
 
+typedef QPair<QString, QString> QStringPair;
+
+QVariant FeatureTableModel::compoundIdColumnData(const QModelIndex &index)
+{
+    const int row = index.row();
+    QVariant result;
+    const FeatureId rowId = dataSource->getFeatureIdByNumber(row);
+    if (featureAnnotationRows.contains(rowId)) {
+        const qint64 annotationStartRecord = featureAnnotationRows[rowId].first;
+        const int annotationCount = featureAnnotationRows[rowId].second;
+        QList<QStringPair> compoundsAndLinks;
+        for (int i = 0; i < annotationCount; ++i) {
+            annotationFetcher.seek(annotationStartRecord + i);
+            compoundsAndLinks.append(QStringPair(annotationFetcher.value(1).toString(), annotationFetcher.value(2).toString()));
+        }
+        QStringList resultAnns;
+        QStringList compIds;
+        bool linkExists = false;
+        foreach(const QStringPair compAndLink, compoundsAndLinks) {
+            if (!compAndLink.second.isEmpty()) {
+                resultAnns.append(QString("<a href=\"%2\">%1</a>").arg(compAndLink.first, compAndLink.second));
+                linkExists = true;
+            } else {
+                resultAnns.append(compAndLink.first);
+            }
+            compIds.append(compAndLink.first);
+        }
+        if (linkExists) {
+            QLabel *label = new QLabel;
+            label->setTextFormat(Qt::RichText);
+            label->setText(resultAnns.join("; "));
+            label->setOpenExternalLinks(true);
+            emit setIndexWidget(index, label);
+        }
+        result = QString(compIds.join("; "));
+    } else {
+        result = tr("N/A");
+    }
+    return result;
+}
+
 QVariant FeatureTableModel::dataInternal(const QModelIndex &index, int role)
 {
     QVariant result;
@@ -137,9 +218,11 @@ QVariant FeatureTableModel::dataInternal(const QModelIndex &index, int role)
         return cachedVal;
     }
 
-    if (column < SAMPLE_COLUMNS_OFFSET) {
+    if (column < ANNOTATION_COLUMN_OFFSET) {
         consensusFeatureFetcher.seek(row);
         result = consensusFeatureFetcher.value(column);
+    } else if (column < SAMPLE_COLUMNS_OFFSET) {
+        result = compoundIdColumnData(index);
     } else {
         const FeatureId rowId = dataSource->getFeatureIdByNumber(row);
         const SampleId columnId = dataSource->getSampleIdByNumber(column - SAMPLE_COLUMNS_OFFSET);
@@ -170,6 +253,8 @@ QVariant FeatureTableModel::headerData(int section, Qt::Orientation orientation,
                 return tr("Consensus RT");
             case 3:
                 return tr("Consensus charge");
+            case 4:
+                return tr("Compound ID");
             default:
                 return QVariant(dataSource->getSampleNameById(dataSource->getSampleIdByNumber(section - SAMPLE_COLUMNS_OFFSET)));
         }

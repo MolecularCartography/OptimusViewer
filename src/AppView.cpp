@@ -10,6 +10,7 @@
 
 #include "ui_AppView.h"
 
+#include "FeatureTableItemDelegate.h"
 #include "FeatureTableModel.h"
 #include "FeatureTableVisibilityDialog.h"
 
@@ -115,7 +116,7 @@ void AppView::featureTableSelectionChanged(const QItemSelection &selected, const
     FeatureTableModel *model = getFeatureTableModel();
     Q_ASSERT(NULL != model);
     foreach (const QModelIndex &index, ui->featureTableView->selectionModel()->selectedIndexes()) {
-        if (index.column() > 3) {
+        if (index.column() > 4) {
             const FeatureId featureId = model->data(model->index(proxyModel->mapToSource(index).row(), 0)).value<FeatureId>(); // hidden 0th column contains feature id
             const SampleId sampleId = model->getSampleIdByColumnNumber(proxyModel->mapToSource(index).column());
             if (!featureMzs.contains(featureId)) {
@@ -165,9 +166,12 @@ void AppView::initGraphView()
 
 void AppView::initFeatureTable(FeatureTableModel *model)
 {
+    connect(model, &FeatureTableModel::setIndexWidget, this, &AppView::setFeatureTableIndexWidget);
+
     QSortFilterProxyModel *proxyModel = new QSortFilterProxyModel(ui->featureTableView);
     proxyModel->setDynamicSortFilter(true);
     proxyModel->setSourceModel(model);
+    ui->featureTableView->setItemDelegate(new FeatureTableItemDelegate(ui->featureTableView));
     ui->featureTableView->setModel(proxyModel);
 
     connect(ui->featureTableView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &AppView::featureTableSelectionChanged);
@@ -230,6 +234,14 @@ void AppView::graphViewLoaded(bool ok)
 void AppView::resetSelection()
 {
     ui->featureTableView->selectionModel()->clearSelection();
+}
+
+void AppView::setFeatureTableIndexWidget(const QModelIndex &index, QWidget *w)
+{
+    QSortFilterProxyModel *proxyModel = dynamic_cast<QSortFilterProxyModel *>(ui->featureTableView->model());
+    Q_ASSERT(NULL != proxyModel);
+
+    ui->featureTableView->setIndexWidget(proxyModel->mapFromSource(index), w);
 }
 
 } // namespace ov
