@@ -144,10 +144,10 @@ function generateXicGraphProto() {
 }
 
 function adjustXicBalloonText(graphDataItem, graph) {
-    var hasPrecursorMz = dataController.precursorMzKey in graph.chart.dataProvider[graphDataItem.index];
-    return (hasPrecursorMz ? ('Precursor m/z: ' + graph.chart.dataProvider[graphDataItem.index][dataController.precursorMzKey].round(4)
-        + '<br>(Click to see MS/MS spectrum)<br>') : '')
-        + '<b><span style="font-size:14px;">Scan start time:' + graphDataItem.values.x.round(2) + ' s</span></b>';
+    if (dataController.precursorMzKey in graphDataItem.dataContext) {
+        return 'Scan start time: ' + graphDataItem.values.x.round(2) + ' s<br>(Click to see fragmentation spectrum)<br>'
+            + '<b><span style="font-size:14px;">Precursor m/z: ' + graphDataItem.dataContext[dataController.precursorMzKey].round(4) + '</span></b>';
+    }
 }
 
 function generateMassGraphProto() {
@@ -468,6 +468,9 @@ function createXicChart(div_id, dataProvider, graphs, guides) {
             'clickMarker': handleXicLegendClick,
             'clickLabel': handleXicLegendClick
         },
+        'titles': [{
+            'text': 'Extracted Ion Chromatogram of Selected Features'
+        }],
         'valueAxes': [{
             'id': 'x',
             'position': 'bottom',
@@ -535,7 +538,12 @@ function handleMassPeakLegendClick(graph) {
     return false;
 }
 
-function createMassPeakChart(div_id, dataProvider, graphs, createSeparateLegend) {
+function getMassPeakChartTitle(fragmentationSpectra) {
+    var title = fragmentationSpectra ? 'Fragmentation Spectra of Selected Scans' : 'Mass Peaks of Selected Features';
+    return [{'text': title}];
+}
+
+function createMassPeakChart(div_id, dataProvider, graphs, fragmentationSpectra) {
     var result = AmCharts.makeChart(div_id, {
         'type': 'xy',
         'marginLeft': 60,
@@ -552,11 +560,12 @@ function createMassPeakChart(div_id, dataProvider, graphs, createSeparateLegend)
             'valueLineBalloonEnabled': true,
         },
         'legend': {
-            'enabled': createSeparateLegend,
+            'enabled': fragmentationSpectra,
             'switchable': graphs.length > 1,
             'clickMarker': handleMassPeakLegendClick,
             'clickLabel': handleMassPeakLegendClick
         },
+        'titles': getMassPeakChartTitle(fragmentationSpectra),
         'valueAxes': [{
             'id': 'x',
             'position': 'bottom',
@@ -574,7 +583,7 @@ function createMassPeakChart(div_id, dataProvider, graphs, createSeparateLegend)
             'enabled': true
         }
     });
-    if (!createSeparateLegend) { // sync hidden graphs
+    if (!fragmentationSpectra) { // sync hidden graphs
         var xicGraphs = chartsById[graphExporter.xicChartId].graphs;
         var massPeakGraphs = result.graphs;
         if (xicGraphSelectionState._selectionActive) {
@@ -589,7 +598,7 @@ function createMassPeakChart(div_id, dataProvider, graphs, createSeparateLegend)
     return result;
 }
 
-function updateMassChartData(graphDescriptors, points, createSeparateLegend) {
+function updateMassChartData(graphDescriptors, points, fragmentationSpectra) {
     var massGraphs = getGraphs(graphDescriptors, points, generateMassGraphProto, 0.1, true, massPointAttributeSetter);
 
     var massPeakChart = chartsById[graphExporter.massPeakChartId];
@@ -597,7 +606,7 @@ function updateMassChartData(graphDescriptors, points, createSeparateLegend) {
         massPeakChart.clear();
     }
 
-    chartsById[graphExporter.massPeakChartId] = createMassPeakChart('mass_peak_container', points, massGraphs, createSeparateLegend);
+    chartsById[graphExporter.massPeakChartId] = createMassPeakChart('mass_peak_container', points, massGraphs, fragmentationSpectra);
 }
 
 function updateChartData(data) {
