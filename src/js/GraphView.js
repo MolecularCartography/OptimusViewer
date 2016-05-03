@@ -448,6 +448,10 @@ function handleXicLegendClick(graph) {
     return false;
 }
 
+function formatNumberAsExponential(value) {
+    return value.toExponential(3);
+}
+
 function createXicChart(div_id, dataProvider, graphs, guides) {
     var result = AmCharts.makeChart(div_id, {
         'type': 'xy',
@@ -474,7 +478,8 @@ function createXicChart(div_id, dataProvider, graphs, guides) {
             'id': 'y',
             'dashLength': 1,
             'position': 'left',
-            'title': 'Intensity [number of ions]'
+            'title': 'Intensity [number of ions]',
+            'labelFunction': formatNumberAsExponential
         }],
         'chartScrollbar': generatePlotScrollbarDescriptor(),
         'chartCursor': {
@@ -561,7 +566,8 @@ function createMassPeakChart(div_id, dataProvider, graphs, createSeparateLegend)
             'id': 'y',
             'dashLength': 1,
             'position': 'left',
-            'title': 'Intensity [number of ions]'
+            'title': 'Intensity [number of ions]',
+            'labelFunction': formatNumberAsExponential
         }],
         'export': generatePlotExportDescriptor(graphExporter.massPeakChartId),
         'responsive': {
