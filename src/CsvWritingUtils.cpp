@@ -23,7 +23,7 @@ QList<QStringList> createEmptyTable(int nRows, int nColumns)
     return result;
 }
 
-bool CsvWritingUtils::saveTableToFile(const QList<QStringList> &table, const QString &path)
+bool saveTableToFile(const QList<QStringList> &table, const QString &path)
 {
     QFile file(path);
     if (file.open(QFile::WriteOnly | QFile::Truncate)) {

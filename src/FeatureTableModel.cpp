@@ -232,7 +232,7 @@ QVariant FeatureTableModel::dataInternal(const QModelIndex &index, int role)
             result = TABLE_DEFAULT_VALUE;
         } else {
             const qint64 endRecordIndex = firstFeatureRecord + featureObservationCount[rowId] - 1;
-            const qint64 targetFeatureRecord = findFirstQueryRecordIndex(intensityFetcher, firstFeatureRecord, endRecordIndex, 1, columnId);
+            findFirstQueryRecordIndex(intensityFetcher, firstFeatureRecord, endRecordIndex, 1, columnId);
 
             result = intensityFetcher.value(1).value<SampleId>() == columnId ? intensityFetcher.value(2) : TABLE_DEFAULT_VALUE;
         }

@@ -29,7 +29,7 @@ public:
     void reset();
     QSqlError lastError() const;
 
-    SampleId FeatureTableModel::getSampleIdByColumnNumber(int column) const;
+    SampleId getSampleIdByColumnNumber(int column) const;
 
 signals:
     void setIndexWidget(const QModelIndex &index, QWidget *w);
