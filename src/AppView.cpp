@@ -68,7 +68,7 @@ void AppView::showHideColumnsTriggered()
     const int columnCount = model->columnCount();
 
     QList<QPair<QString, bool> > headers;
-    for (int i = 1; i < columnCount; ++i) {
+    for (int i = 0; i < columnCount; ++i) {
         headers.append(QPair<QString, bool>(model->headerData(i, Qt::Horizontal).toString(), !ui->featureTableView->isColumnHidden(i)));
     }
 
@@ -76,8 +76,8 @@ void AppView::showHideColumnsTriggered()
     if (QDialog::Accepted == d.exec()) {
         const QBitArray updatedHeaders = d.getHeaderVisibility();
         Q_ASSERT(updatedHeaders.size() == headers.size());
-        for (int i = 1; i < columnCount; ++i) {
-            ui->featureTableView->setColumnHidden(i, !updatedHeaders.testBit(i - 1));
+        for (int i = 0; i < columnCount; ++i) {
+            ui->featureTableView->setColumnHidden(i, !updatedHeaders.testBit(i));
         }
     }
 }
@@ -87,7 +87,7 @@ void AppView::exportToCsvTriggered()
     QVector<int> visibleColumns;
     FeatureTableModel *model = getFeatureTableModel();
     const int columnCount = model->columnCount();
-    for (int i = 1; i < columnCount; ++i) {
+    for (int i = 0; i < columnCount; ++i) {
         if (!ui->featureTableView->isColumnHidden(i)) {
             visibleColumns.append(i);
         }
@@ -117,7 +117,7 @@ void AppView::featureTableSelectionChanged(const QItemSelection &selected, const
     Q_ASSERT(NULL != model);
     foreach (const QModelIndex &index, ui->featureTableView->selectionModel()->selectedIndexes()) {
         if (index.column() > 4) {
-            const FeatureId featureId = model->data(model->index(proxyModel->mapToSource(index).row(), 0)).value<FeatureId>(); // hidden 0th column contains feature id
+            const FeatureId featureId = model->data(model->index(proxyModel->mapToSource(index).row(), 0)).value<FeatureId>(); // the 0th column contains feature id
             const SampleId sampleId = model->getSampleIdByColumnNumber(proxyModel->mapToSource(index).column());
             if (!featureMzs.contains(featureId)) {
                 featureMzs[featureId] = model->data(model->index(proxyModel->mapToSource(index).row(), 1)).toReal(); // the 1st column contains mz value
@@ -215,11 +215,9 @@ void AppView::samplesChanged()
     if (QSqlError::NoError != model->lastError().type()) {
         QMessageBox::critical(this, tr("Error"), model->lastError().text());
     } else {
-        ui->featureTableView->hideColumn(0);
-        for (int column = 1; column < model->columnCount(); ++column) {
+        for (int column = 0; column < model->columnCount(); ++column) {
             ui->featureTableView->resizeColumnToContents(column);
         }
-
         ui->actionExportToCsv->setEnabled(true);
     }
 }

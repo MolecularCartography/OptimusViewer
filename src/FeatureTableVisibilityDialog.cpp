@@ -93,7 +93,7 @@ void FeatureTableVisibilityDialog::accept()
         }
     }
     if (!selectionExists) {
-        QMessageBox::warning(this, tr("Warning"), tr("Please, select at least one header."));
+        QMessageBox::warning(this, tr("Warning"), tr("Please, select at least one column."));
     } else {
         QDialog::accept();
     }
