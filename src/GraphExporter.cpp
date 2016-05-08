@@ -141,6 +141,11 @@ void GraphExporter::saveGraphAsSvg(const GraphId &id, const QString &path, doubl
 void GraphExporter::saveGraphAsPdf(const GraphId &id, const QString &path, double scale) const
 {
     QWebElement graphElement = getGraphWebElement(id);
+    QWebElement legendElement = getLegendWebElement(id);
+
+    const QRect graphGeometry = graphElement.geometry();
+    const QRect legendGeometry = legendElement.geometry();
+    const double legendScalingFactor = double(graphGeometry.width()) / legendGeometry.width();
 
     QPrinter printer(QPrinter::ScreenResolution);
     printer.setOutputFormat(QPrinter::PdfFormat);
@@ -155,6 +160,9 @@ void GraphExporter::saveGraphAsPdf(const GraphId &id, const QString &path, doubl
 
     painter.scale(scale, scale);
     graphElement.render(&painter);
+    painter.translate(QPoint(0, graphGeometry.height()));
+    painter.scale(legendScalingFactor, legendScalingFactor);
+    legendElement.render(&painter);
 }
 
 void GraphExporter::saveGraphAsCsv(const GraphId &id, const QString &path, const QVariantList &graphPoints) const
