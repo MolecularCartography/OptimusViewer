@@ -117,17 +117,25 @@ void GraphExporter::saveGraphAsImage(const GraphId &id, const FormatId &formatId
 void GraphExporter::saveGraphAsSvg(const GraphId &id, const QString &path, double scale) const
 {
     QWebElement graphElement = getGraphWebElement(id);
+    QWebElement legendElement = getLegendWebElement(id);
+    const QRect graphGeometry = graphElement.geometry();
+    const QRect legendGeometry = legendElement.geometry();
 
     QSvgGenerator generator;
     generator.setFileName(path);
-    generator.setSize(graphElement.geometry().size());
+    const double legendScalingFactor = double(graphGeometry.width()) / legendGeometry.width();
+    generator.setSize(QSize(graphGeometry.width() * scale,
+        (graphGeometry.height() + legendGeometry.height() * legendScalingFactor) * scale));
 
-    generator.setTitle(tr("Quickmix SVG Generator"));
+    generator.setTitle(tr("Snapshot by Quickmix"));
     generator.setDescription(tr("An image of a plot created by Quickmix software, LC-MS data visualization tool."));
 
     QPainter painter(&generator);
     painter.scale(scale, scale);
     graphElement.render(&painter);
+    painter.translate(QPoint(0, graphGeometry.height()));
+    painter.scale(legendScalingFactor, legendScalingFactor);
+    legendElement.render(&painter);
 }
 
 void GraphExporter::saveGraphAsPdf(const GraphId &id, const QString &path, double scale) const

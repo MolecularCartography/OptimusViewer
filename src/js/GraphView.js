@@ -93,8 +93,10 @@ function generateFormatListMenu(chartId, formats) {
                 chart.zoomOutText = '';
                 chart.chartCursor.valueLineBalloonEnabled = false;
                 var legendFontSize = legend.fontSize;
+                var legendMarkerSize = legend.markerSize;
                 var legendFontScalingFactor = legend.divWidth / chart.divRealWidth;
                 legend.fontSize = legendFontScalingFactor * legendFontSize;
+                legend.markerSize = legendFontScalingFactor * legendMarkerSize;
 
                 chart.chartScrollbar.enabled = false;
                 chartsToValidate.forEach(function(chart) { chart.validateData(); });
@@ -102,6 +104,7 @@ function generateFormatListMenu(chartId, formats) {
                 graphExporter.exportGraph(chartId, menuItem.label, getCoordinates(chartId));
 
                 legend.fontSize = legendFontSize;
+                legend.markerSize = legendMarkerSize;
                 chart.chartScrollbar.enabled = true;
                 chart.chartCursor.cursorAlpha = cursorAlpha;
                 chart.zoomOutButtonImage = zoomButtonImage;
