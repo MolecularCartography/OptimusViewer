@@ -2,8 +2,8 @@
 
 namespace qm {
 
-Ms2ScanInfo::Ms2ScanInfo(qreal scanTime, qreal precursorMz, const FragmentationSpectrumId &spectrumId, const QString &scanId)
-    : scanTime(scanTime), precursorMz(precursorMz), spectrumId(spectrumId), scanId(scanId)
+Ms2ScanInfo::Ms2ScanInfo(qreal scanTime, qreal precursorMz, const FragmentationSpectrumId &spectrumId)
+    : scanTime(scanTime), precursorMz(precursorMz), spectrumId(spectrumId)
 {
 
 }

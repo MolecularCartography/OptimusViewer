@@ -7,6 +7,7 @@ var dataFormats = graphExporter.supportedDataFormatIds;
 
 var auxPointFlag = 'aux_data';
 var graphTitleKey = 'title';
+var scanStartKey = 'scan_start';
 var graphXFieldKey = 'xField';
 var graphYFieldKey = 'yField';
 var graphColorKey = 'lineColor';
@@ -193,7 +194,19 @@ function isAuxPoint(point) {
     return auxPointFlag in point;
 }
 
-function getGraphs(graphDescriptors, points, graphProtoGenerator, horizontalOffset, stickPlot, pointAttributeSetter) {
+function generateMs1GraphTitle(graphDescriptor) {
+    return 'Feature ID: ' + graphDescriptor[dataController.featureIdKey]
+        + '<br>Consensus m/z: ' + graphDescriptor[dataController.consensusMzGraphKey].round(4)
+        + '<br>Sample: ' + graphDescriptor[dataController.sampleNameGraphKey];
+}
+
+function generateMs2GraphTitle(graphDescriptor) {
+    return 'Precursor m/z: ' + graphDescriptor[dataController.precursorMzKey]
+        + '<br>Sample: ' + graphDescriptor[dataController.sampleNameGraphKey]
+        + '<br>Scan start time: ' + graphDescriptor[scanStartKey] + ' s';
+}
+
+function getGraphs(graphDescriptors, points, graphProtoGenerator, horizontalOffset, stickPlot, pointAttributeSetter, graphTitleGenarator) {
     var graphs = [];
 
     if (!graphDescriptors || !points) {
@@ -221,12 +234,7 @@ function getGraphs(graphDescriptors, points, graphProtoGenerator, horizontalOffs
             var currentGraph = graphProtoGenerator();
             currentGraph[graphXFieldKey] = curGraphDescriptor[dataController.xFieldKey];
             currentGraph[graphYFieldKey] = curGraphDescriptor[dataController.yFieldKey];
-            currentGraph[graphTitleKey] = 'Sample: ' + curGraphDescriptor[dataController.sampleNameGraphKey];
-            if (dataController.scanIdKey in curGraphDescriptor) {
-                currentGraph[graphTitleKey] += '<br>Scan ID: ' + curGraphDescriptor[dataController.scanIdKey];
-            } else if (dataController.consensusMzGraphKey in curGraphDescriptor) {
-                currentGraph[graphTitleKey] += '<br>Consensus m/z: ' + curGraphDescriptor[dataController.consensusMzGraphKey].round(4);
-            }
+            currentGraph[graphTitleKey] = graphTitleGenarator(curGraphDescriptor);
             currentGraph[graphColorKey] = graphColorKey in curGraphDescriptor ? curGraphDescriptor[graphColorKey] : graphColors.getColor(graphs.length);
             currentGraph['id'] = curGraphId;
             graphs.push(currentGraph);
@@ -372,9 +380,11 @@ var xicGraphSelectionState = {
                 throw 'Failed to find XIC point with fragmentation spectrum ID ' + graphId;
             }
 
-            graphDescriptors[graphId][dataController.scanIdKey] = xicPoint[dataController.scanIdKey];
-            graphDescriptors[graphId][dataController.sampleNameGraphKey]
-                = actualPlotData[dataController.xicGraphDescKey][xicPoint[dataController.graphIdKey]][dataController.sampleNameGraphKey];
+            var xicGraphDescriptor = actualPlotData[dataController.xicGraphDescKey][xicPoint[dataController.graphIdKey]];
+
+            graphDescriptors[graphId][dataController.precursorMzKey] = xicPoint[dataController.precursorMzKey].round(4);
+            graphDescriptors[graphId][scanStartKey] = xicPoint[xicGraphDescriptor[dataController.xFieldKey]].round(2);
+            graphDescriptors[graphId][dataController.sampleNameGraphKey] = xicGraphDescriptor[dataController.sampleNameGraphKey];
             graphDescriptors[graphId][graphColorKey] = xicPointColor;
         }
         actualPlotData[dataController.msnGraphDescKey] = graphDescriptors;
@@ -599,7 +609,8 @@ function createMassPeakChart(div_id, dataProvider, graphs, fragmentationSpectra)
 }
 
 function updateMassChartData(graphDescriptors, points, fragmentationSpectra) {
-    var massGraphs = getGraphs(graphDescriptors, points, generateMassGraphProto, 0.1, true, massPointAttributeSetter);
+    var massGraphs = getGraphs(graphDescriptors, points, generateMassGraphProto, 0.1, true,
+        massPointAttributeSetter, fragmentationSpectra ? generateMs2GraphTitle : generateMs1GraphTitle);
 
     var massPeakChart = chartsById[graphExporter.massPeakChartId];
     if (null !== massPeakChart) {
@@ -613,13 +624,15 @@ function updateChartData(data) {
     xicGraphSelectionState.reset();
     actualPlotData = data;
 
-    var xicGraphs = getGraphs(data[dataController.xicGraphDescKey], data[dataController.xicGraphDataKey], generateXicGraphProto, 0, false, xicPointAttributeSetter);
+    var xicGraphs = getGraphs(data[dataController.xicGraphDescKey], data[dataController.xicGraphDataKey],
+        generateXicGraphProto, 0, false, xicPointAttributeSetter, generateMs1GraphTitle);
 
     var xicChart = chartsById[graphExporter.xicChartId];
     if (null !== xicChart) {
         xicChart.clear();
     }
-    chartsById[graphExporter.xicChartId] = createXicChart('xic_container', data[dataController.xicGraphDataKey], xicGraphs, createXicGuides(xicGraphs, data[dataController.xicGraphDescKey]));
+    chartsById[graphExporter.xicChartId] = createXicChart('xic_container', data[dataController.xicGraphDataKey],
+        xicGraphs, createXicGuides(xicGraphs, data[dataController.xicGraphDescKey]));
 
     updateMassChartData(data[dataController.ms1GraphDescKey], data[dataController.ms1GraphDataKey], false);
 }

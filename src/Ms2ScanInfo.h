@@ -6,12 +6,11 @@
 namespace qm {
 
 struct Ms2ScanInfo {
-    Ms2ScanInfo(qreal scanTime, qreal precursorMz, const FragmentationSpectrumId &spectrumId, const QString &scanId);
+    Ms2ScanInfo(qreal scanTime, qreal precursorMz, const FragmentationSpectrumId &spectrumId);
 
     qreal scanTime;
     qreal precursorMz;
     FragmentationSpectrumId spectrumId;
-    QString scanId;
 };
 
 } // namespace qm

@@ -26,6 +26,7 @@ QVariantMap GraphDataController::ms1graphDescriptionToMap(const Ms1GraphDescript
     result[getYFieldKey()] = graphDescription.getYField();
     result[getSampleNameGraphKey()] = graphDescription.sampleName;
     result[getConsensusMzGraphKey()] = graphDescription.consensusMz;
+    result[getFeatureIdKey()] = graphDescription.featureId;
     return result;
 }
 
@@ -59,7 +60,6 @@ void GraphDataController::addMs2ScanPointToGraph(const QPointF &prevXicPoint, co
             variantPlotData[graphDescription.getYField()] = prevXicPoint.y() + intensityDelta;
             variantPlotData[getPrecursorMzKey()] = ms2Point->precursorMz;
             variantPlotData[getSpectrumIdKey()] = ms2Point->spectrumId;
-            variantPlotData[getScanIdKey()] = ms2Point->scanId;
             variantPlotData[getGraphIdKey()] = graphDescription.graphId;
 
             xicGraph.append(variantPlotData);
@@ -194,9 +194,9 @@ QString GraphDataController::getSpectrumIdKey() const
     return "spectrum_id";
 }
 
-QString GraphDataController::getScanIdKey() const
+QString GraphDataController::getFeatureIdKey() const
 {
-    return "scan_id";
+    return "feature_id";
 }
 
 QString GraphDataController::getSampleNameGraphKey() const
