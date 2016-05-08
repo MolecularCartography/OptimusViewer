@@ -491,7 +491,7 @@ function createXicChart(div_id, dataProvider, graphs, guides) {
             'id': 'y',
             'dashLength': 1,
             'position': 'left',
-            'title': 'Intensity [number of ions]',
+            'title': 'Ion count',
             'labelFunction': formatNumberAsExponential
         }],
         'chartScrollbar': generatePlotScrollbarDescriptor(),
@@ -585,7 +585,7 @@ function createMassPeakChart(div_id, dataProvider, graphs, fragmentationSpectra)
             'id': 'y',
             'dashLength': 1,
             'position': 'left',
-            'title': 'Intensity [number of ions]',
+            'title': 'Ion count',
             'labelFunction': formatNumberAsExponential
         }],
         'export': generatePlotExportDescriptor(graphExporter.massPeakChartId),
