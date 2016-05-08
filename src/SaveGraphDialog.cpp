@@ -25,13 +25,15 @@ SaveGraphDialog::SaveGraphDialog(QWidget *parent, const FormatId &selectedFormat
 void SaveGraphDialog::initFilters()
 {
     const QStringList formats = QStringList() << ExportFormats::lossyImageFormats << ExportFormats::losslessImageFormats
-        << ExportFormats::vectorImageFormats << ExportFormats::dataFormats;
+        << ExportFormats::resizableVectorImageFormats << ExportFormats::fixedSizeVectorImageFormats << ExportFormats::dataFormats;
     QStringList filters;
     foreach (const QString &format, formats) {
         const char *filterStr = NULL;
         if (ExportFormats::lossyImageFormats.contains(format) || ExportFormats::losslessImageFormats.contains(format)) {
             filterStr = "%1 Image (*.%2)";
-        } else if (ExportFormats::vectorImageFormats.contains(format)) {
+        } else if (ExportFormats::resizableVectorImageFormats.contains(format)
+            || ExportFormats::fixedSizeVectorImageFormats.contains(format))
+        {
             filterStr = "%1 Document (*.%2)";
         } else if (ExportFormats::dataFormats.contains(format)) {
             filterStr = "%1 File (*.%2)";
@@ -137,8 +139,13 @@ void SaveGraphDialog::filterSelected(const QString &filter)
     if (ExportFormats::lossyImageFormats.contains(selectedFormat)) {
         setWidgetsVisibility(scaleControllers, true);
         setWidgetsVisibility(qualityControllers, true);
-    } else if (ExportFormats::vectorImageFormats.contains(selectedFormat) || ExportFormats::losslessImageFormats.contains(selectedFormat)) {
+    } else if (ExportFormats::resizableVectorImageFormats.contains(selectedFormat)
+        || ExportFormats::losslessImageFormats.contains(selectedFormat))
+    {
         setWidgetsVisibility(scaleControllers, true);
+        setWidgetsVisibility(qualityControllers, false);
+    } else if (ExportFormats::fixedSizeVectorImageFormats.contains(selectedFormat)) {
+        setWidgetsVisibility(scaleControllers, false);
         setWidgetsVisibility(qualityControllers, false);
     } else if (ExportFormats::dataFormats.contains(selectedFormat)) {
         setWidgetsVisibility(scaleControllers, false);

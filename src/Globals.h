@@ -25,7 +25,8 @@ namespace ExportFormats {
 
 extern const QList<FormatId> lossyImageFormats;
 extern const QList<FormatId> losslessImageFormats;
-extern const QList<FormatId> vectorImageFormats;
+extern const QList<FormatId> resizableVectorImageFormats;
+extern const QList<FormatId> fixedSizeVectorImageFormats;
 extern const QList<FormatId> dataFormats;
 
 }

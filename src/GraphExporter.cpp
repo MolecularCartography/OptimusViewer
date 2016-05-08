@@ -15,7 +15,7 @@
 namespace qm {
 
 const QList<FormatId> GraphExporter::supportedImageFormatIds = QStringList() << ExportFormats::lossyImageFormats
-    << ExportFormats::losslessImageFormats << ExportFormats::vectorImageFormats;
+    << ExportFormats::losslessImageFormats << ExportFormats::resizableVectorImageFormats << ExportFormats::fixedSizeVectorImageFormats;
 const QList<FormatId> GraphExporter::supportedDataFormatIds = QStringList() << ExportFormats::dataFormats;
 
 namespace {
@@ -138,7 +138,7 @@ void GraphExporter::saveGraphAsSvg(const GraphId &id, const QString &path, doubl
     legendElement.render(&painter);
 }
 
-void GraphExporter::saveGraphAsPdf(const GraphId &id, const QString &path, double scale) const
+void GraphExporter::saveGraphAsPdf(const GraphId &id, const QString &path) const
 {
     QWebElement graphElement = getGraphWebElement(id);
     QWebElement legendElement = getLegendWebElement(id);
@@ -158,7 +158,10 @@ void GraphExporter::saveGraphAsPdf(const GraphId &id, const QString &path, doubl
         return;
     }
 
-    painter.scale(scale, scale);
+    const qreal pageWidth = printer.pageLayout().pageSize().rect(QPageSize::Inch).width();
+    const qreal pageScale = pageWidth * printer.resolution() / graphGeometry.width();
+
+    painter.scale(pageScale, pageScale);
     graphElement.render(&painter);
     painter.translate(QPoint(0, graphGeometry.height()));
     painter.scale(legendScalingFactor, legendScalingFactor);
@@ -248,7 +251,7 @@ void GraphExporter::exportGraph(const QString &graphId, const FormatId &initialF
         if (finalFormatId == "SVG") {
             saveGraphAsSvg(graphId, path, saveDialog->getScale());
         } else if (finalFormatId == "PDF") {
-            saveGraphAsPdf(graphId, path, saveDialog->getScale());
+            saveGraphAsPdf(graphId, path);
         } else {
             saveGraphAsImage(graphId, finalFormatId, path, saveDialog->getQuality(), saveDialog->getScale());
         }

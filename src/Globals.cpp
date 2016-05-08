@@ -25,7 +25,8 @@ namespace ExportFormats {
 
 const QList<FormatId> lossyImageFormats = QList<FormatId>() << "PNG" << "JPG";
 const QList<FormatId> losslessImageFormats = QList<FormatId>() << "BMP";
-const QList<FormatId> vectorImageFormats = QList<FormatId>() << "PDF" << "SVG";
+const QList<FormatId> resizableVectorImageFormats = QList<FormatId>() << "SVG";
+const QList<FormatId> fixedSizeVectorImageFormats = QList<FormatId>() << "PDF";
 const QList<FormatId> dataFormats = QList<FormatId>() << "CSV";
 
 }
