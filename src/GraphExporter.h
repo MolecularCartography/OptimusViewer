@@ -38,6 +38,7 @@ private:
     QWebView *graphView;
 
     QWebElement getGraphWebElement(const GraphId &id) const;
+    QWebElement getLegendWebElement(const GraphId &id) const;
     void saveGraphAsImage(const GraphId &id, const FormatId &formatId, const QString &path, int quality, double scale) const;
     void saveGraphAsSvg(const GraphId &id, const QString &path, double scale) const;
     void saveGraphAsPdf(const GraphId &id, const QString &path, double scale) const;

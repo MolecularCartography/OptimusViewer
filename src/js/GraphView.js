@@ -76,6 +76,12 @@ function generateFormatListMenu(chartId, formats) {
             'label': formatId,
             'click': function (event, menuItem) {
                 var chart = chartsById[chartId];
+                var chartsToValidate = [chart];
+                var legend = chart.legend;
+                if (!chart.legend.enabled) {
+                    legend = chartsById[graphExporter.xicChartId].legend;
+                    chartsToValidate.push(chartsById[graphExporter.xicChartId]);
+                }
 
                 // seems that chart.chartCursor.enabled property doesn't work so we play with alpha of cursor
                 // TODO: check the property with future versions of amCharts
@@ -86,18 +92,22 @@ function generateFormatListMenu(chartId, formats) {
                 var zoomButtonText = chart.zoomOutText;
                 chart.zoomOutText = '';
                 chart.chartCursor.valueLineBalloonEnabled = false;
+                var legendFontSize = legend.fontSize;
+                var legendFontScalingFactor = legend.divWidth / chart.divRealWidth;
+                legend.fontSize = legendFontScalingFactor * legendFontSize;
 
                 chart.chartScrollbar.enabled = false;
-                chart.validateData();
+                chartsToValidate.forEach(function(chart) { chart.validateData(); });
 
                 graphExporter.exportGraph(chartId, menuItem.label, getCoordinates(chartId));
 
+                legend.fontSize = legendFontSize;
                 chart.chartScrollbar.enabled = true;
                 chart.chartCursor.cursorAlpha = cursorAlpha;
                 chart.zoomOutButtonImage = zoomButtonImage;
                 chart.zoomOutText = zoomButtonText;
                 chart.chartCursor.valueLineBalloonEnabled = true;
-                chart.validateData();
+                chartsToValidate.forEach(function(chart) { chart.validateData(); });
             }
         };
         menuItems.push(menuItem);

@@ -77,20 +77,37 @@ void GraphExporter::setGraphView(QWebView *view)
 QWebElement GraphExporter::getGraphWebElement(const GraphId &id) const
 {
     Q_ASSERT(NULL != graphView);
-    return graphView->page()->mainFrame()->findFirstElement(QString("#%1 svg").arg(GraphIds::getHtmlContainerIdForGraph(id)));
+    return graphView->page()->mainFrame()->findFirstElement(QString("#%1 .amcharts-chart-div svg").arg(GraphIds::getHtmlContainerIdForGraph(id)));
+}
+
+QWebElement GraphExporter::getLegendWebElement(const GraphId &id) const
+{
+    Q_ASSERT(NULL != graphView);
+    QWebElement legendElement = graphView->page()->mainFrame()->findFirstElement(QString("#%1 .amcharts-legend-div svg").arg(GraphIds::getHtmlContainerIdForGraph(id)));
+    if (legendElement.isNull()) {
+        legendElement = graphView->page()->mainFrame()->findFirstElement(QString("#legend_container svg"));
+        Q_ASSERT(!legendElement.isNull());
+    }
+    return legendElement;
 }
 
 void GraphExporter::saveGraphAsImage(const GraphId &id, const FormatId &formatId, const QString &path, int quality, double scale) const
 {
     QWebElement graphElement = getGraphWebElement(id);
+    QWebElement legendElement = getLegendWebElement(id);
     const QRect graphGeometry = graphElement.geometry();
+    const QRect legendGeometry = legendElement.geometry();
 
-    QImage image(graphGeometry.width() * scale, graphGeometry.height() * scale, QImage::Format_ARGB32_Premultiplied);
+    const double legendScalingFactor = double(graphGeometry.width()) / legendGeometry.width();
+    QImage image(graphGeometry.width() * scale, (graphGeometry.height() + legendGeometry.height() * legendScalingFactor) * scale, QImage::Format_ARGB32_Premultiplied);
 
     image.fill(Qt::white);
     QPainter painter(&image);
     painter.scale(scale, scale);
     graphElement.render(&painter);
+    painter.translate(QPoint(0, graphGeometry.height()));
+    painter.scale(legendScalingFactor, legendScalingFactor);
+    legendElement.render(&painter);
 
     if (!image.save(path, formatId.toLocal8Bit().constData(), quality)) {
         QMessageBox::critical(QApplication::activeWindow(), tr("Error"), tr("Unable to save the file. Perhaps, it is being used by another process."));
