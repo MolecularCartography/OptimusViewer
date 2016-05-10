@@ -216,6 +216,7 @@ void AppView::samplesChanged()
         QMessageBox::critical(this, tr("Error"), model->lastError().text());
     } else {
         for (int column = 0; column < model->columnCount(); ++column) {
+            ui->featureTableView->setColumnHidden(column, false);
             ui->featureTableView->resizeColumnToContents(column);
         }
         ui->actionExportToCsv->setEnabled(true);
