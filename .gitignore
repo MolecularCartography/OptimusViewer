@@ -8,3 +8,5 @@ _tmp
 *.vcxproj
 *.user
 *.opensdf
+*Makefile*
+*.stash
