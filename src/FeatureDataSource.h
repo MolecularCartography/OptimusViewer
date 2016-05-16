@@ -42,6 +42,7 @@ public slots:
 
 private:
     bool setDataSource(const DataSourceId &dataSourceId);
+    bool isDataSourceVersionSupported();
     DataSourceId currentDataSourceId() const;
     void updateSamplesInfo();
     void updateFeaturesInfo();

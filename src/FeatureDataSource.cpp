@@ -223,9 +223,7 @@ void FeatureDataSource::selectDataSource()
     DataSourceId dataSourceId = QFileDialog::getOpenFileName(QApplication::activeWindow(), QObject::tr("Open File"), QString(), getInputFileFilter());
     if (dataSourceId.isEmpty()) {
         return;
-    } else if (!setDataSource(dataSourceId)) {
-        QMessageBox::critical(QApplication::activeWindow(), tr("Error"), tr("Unable to read the Optimus database."));
-    } else {
+    } else if (setDataSource(dataSourceId)) {
         updateSamplesInfo();
         updateFeaturesInfo();
         currentFeatures.clear();
@@ -300,6 +298,61 @@ DataSourceId FeatureDataSource::currentDataSourceId() const
     return db.databaseName();
 }
 
+namespace {
+
+int versionToInt(const QString &strVersion)
+{
+    return QString(strVersion).replace(".", "").toInt();
+}
+
+QString getMetaInfoValue(const QString &key)
+{
+    QSqlQuery query;
+    query.prepare("SELECT value FROM MetaInfo WHERE key = ?");
+    query.addBindValue(key);
+    const ok = query.exec();
+    Q_ASSERT(ok);
+    query.next();
+    return query.value(0).toString();
+}
+
+}
+
+bool FeatureDataSource::isDataSourceVersionSupported()
+{
+    const QString minOptimusVersionStr = getMetaInfoValue("min_compatible_optimus_version");
+    const int dataSourceMinOptimusVersion = versionToInt(minOptimusVersionStr);
+
+    const QString curOptimusVersionStr = getMetaInfoValue("optimus_version");
+    const int dataSourceCurOptimusVersion = versionToInt(curOptimusVersionStr);
+
+    const int curSupportedVersion = versionToInt(CURRENT_OPTIMUS_VERSION);
+    if (dataSourceMinOptimusVersion > curSupportedVersion) {
+        QMessageBox::critical(QApplication::activeWindow(), tr("Error"),
+            tr("This Optimus database was created by Optimus version %1 "
+               "which is not compatible with the current version of OptimusViewer. "
+               "Use newer versions of OptimusViewer to open this file.").arg(curOptimusVersionStr));
+        return false;
+    }
+
+    const int minSupportedVersion = versionToInt(MIN_COMPATIBLE_OPTIMUS_VERSION);
+    if (dataSourceCurOptimusVersion < minSupportedVersion) {
+        QMessageBox::critical(QApplication::activeWindow(), tr("Error"),
+            tr("This Optimus database was created by Optimus version %1 "
+            "which is not compatible with the current version of OptimusViewer. "
+            "Use previous versions of OptimusViewer to open this file.").arg(curOptimusVersionStr));
+        return false;
+    }
+
+    if (dataSourceCurOptimusVersion > curSupportedVersion) {
+        QMessageBox::warning(QApplication::activeWindow(), tr("Warning"),
+            tr("This Optimus database was created by Optimus version %1 "
+            "which is newer than expected by the current version of OptimusViewer. "
+            "Some features might be not available.").arg(curOptimusVersionStr));
+    }
+    return true;
+}
+
 bool FeatureDataSource::setDataSource(const DataSourceId &dataSourceId)
 {
     Q_ASSERT(!dataSourceId.isEmpty());
@@ -320,6 +373,12 @@ bool FeatureDataSource::setDataSource(const DataSourceId &dataSourceId)
             "PRAGMA cache_size = 50000;"
             "PRAGMA foreign_keys = ON;"
         );
+        if (!isDataSourceVersionSupported()) {
+            db.close();
+            storageAvailable = false;
+        }
+    } else {
+        QMessageBox::critical(QApplication::activeWindow(), tr("Error"), tr("Unable to read the Optimus database."));
     }
 
     return storageAvailable;
