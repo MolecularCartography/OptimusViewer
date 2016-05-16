@@ -7,7 +7,7 @@
 
 #include "FeatureTableExporter.h"
 
-namespace qm {
+namespace ov {
 
 FeatureTableExporter::FeatureTableExporter(const FeatureTableModel &model)
     : model(model)

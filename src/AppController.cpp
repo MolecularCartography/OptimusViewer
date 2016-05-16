@@ -5,7 +5,7 @@
 
 #include "AppController.h"
 
-namespace qm {
+namespace ov {
 
 bool AppController::staticInitializationDone = false;
 

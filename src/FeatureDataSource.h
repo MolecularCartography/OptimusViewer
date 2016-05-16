@@ -10,7 +10,7 @@
 #include "FeatureData.h"
 #include "Ms2ScanInfo.h"
 
-namespace qm {
+namespace ov {
 
 class FeatureDataSource: public QObject
 {

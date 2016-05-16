@@ -6,7 +6,7 @@
 
 #include "FeatureTableVisibilityDialog.h"
 
-namespace qm {
+namespace ov {
 
 FeatureTableVisibilityDialog::FeatureTableVisibilityDialog(const QList<QPair<QString, bool> > &headers, QWidget *parent)
     : QDialog(parent), ui(new Ui::FeatureTableVisibilityDialogUi)

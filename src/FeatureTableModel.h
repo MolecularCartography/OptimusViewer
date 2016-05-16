@@ -7,7 +7,7 @@
 
 #include "Globals.h"
 
-namespace qm {
+namespace ov {
 
 class FeatureDataSource;
 

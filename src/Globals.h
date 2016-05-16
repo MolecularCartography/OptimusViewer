@@ -3,7 +3,7 @@
 
 #include <QStringList>
 
-namespace qm {
+namespace ov {
 
 typedef qint64 SampleId;
 typedef QString DataSourceId;

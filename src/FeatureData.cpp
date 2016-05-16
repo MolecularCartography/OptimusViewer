@@ -2,7 +2,7 @@
 
 #include "FeatureData.h"
 
-namespace qm {
+namespace ov {
 
 FeatureData::FeatureData()
     : sampleId(-1), featureId(-1), featureStart(-1), featureEnd(-1)

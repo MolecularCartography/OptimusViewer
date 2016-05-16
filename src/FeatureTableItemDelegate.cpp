@@ -2,7 +2,7 @@
 
 #include "FeatureTableItemDelegate.h"
 
-namespace qm {
+namespace ov {
 
 FeatureTableItemDelegate::FeatureTableItemDelegate(QAbstractItemView *view)
     : QStyledItemDelegate(view), view(view)

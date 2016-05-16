@@ -3,7 +3,7 @@ TEMPLATE = app
 CONFIG += debug_and_release
 
 CONFIG(debug, debug|release) {
-    TARGET = Quickmixd
+    TARGET = OptimusViewerd
     DEFINES += _DEBUG
     CONFIG += console
     DESTDIR = _debug
@@ -12,7 +12,7 @@ CONFIG(debug, debug|release) {
 }
 
 CONFIG(release, debug|release) {
-    TARGET = Quickmix
+    TARGET = OptimusViewer
     DEFINES += NDEBUG
     DESTDIR = _release
     MOC_DIR = _tmp/moc/release

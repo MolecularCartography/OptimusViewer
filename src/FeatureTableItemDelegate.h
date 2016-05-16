@@ -3,7 +3,7 @@
 
 #include <QStyledItemDelegate>
 
-namespace qm {
+namespace ov {
 
 class FeatureTableItemDelegate : public QStyledItemDelegate
 {

@@ -12,7 +12,7 @@
 
 #include "GraphExporter.h"
 
-namespace qm {
+namespace ov {
 
 const QList<FormatId> GraphExporter::supportedImageFormatIds = QStringList() << ExportFormats::lossyImageFormats
     << ExportFormats::losslessImageFormats << ExportFormats::resizableVectorImageFormats << ExportFormats::fixedSizeVectorImageFormats;
@@ -127,8 +127,8 @@ void GraphExporter::saveGraphAsSvg(const GraphId &id, const QString &path, doubl
     generator.setSize(QSize(graphGeometry.width() * scale,
         (graphGeometry.height() + legendGeometry.height() * legendScalingFactor) * scale));
 
-    generator.setTitle(tr("Snapshot by Quickmix"));
-    generator.setDescription(tr("An image of a plot created by Quickmix software, LC-MS data visualization tool."));
+    generator.setTitle(tr("Snapshot by OptimusViewer"));
+    generator.setDescription(tr("An image of a plot created by OptimusViewer software, LC-MS data visualization tool."));
 
     QPainter painter(&generator);
     painter.scale(scale, scale);

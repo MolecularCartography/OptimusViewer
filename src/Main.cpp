@@ -10,6 +10,6 @@ int main(int argc, char *argv[])
     }
 
     QApplication a(argc, argv);
-    qm::AppController c;
+    ov::AppController c;
     return a.exec();
 }

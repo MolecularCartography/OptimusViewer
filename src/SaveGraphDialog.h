@@ -6,7 +6,7 @@
 
 #include "Globals.h"
 
-namespace qm {
+namespace ov {
 
 class SaveGraphDialog : public QFileDialog
 {

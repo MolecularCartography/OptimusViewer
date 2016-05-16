@@ -10,7 +10,7 @@
 
 class QWebView;
 
-namespace qm {
+namespace ov {
 
 class GraphExporter : public QObject
 {

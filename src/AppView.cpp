@@ -16,7 +16,7 @@
 
 #include "AppView.h"
 
-namespace qm {
+namespace ov {
 
 AppView::AppView(QWidget *parent)
     : QMainWindow(parent), graphViewInited(false), hideColumnAction(NULL), showHideColumnsAction(NULL), lastReferredLogicalColumn(-1),

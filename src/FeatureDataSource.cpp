@@ -9,7 +9,7 @@
 
 const int QUERY_PARAMS_LIMIT = 999;
 
-namespace qm {
+namespace ov {
 
 FeatureDataSource::FeatureDataSource()
 {

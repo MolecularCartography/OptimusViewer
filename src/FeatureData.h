@@ -6,7 +6,7 @@
 
 #include "Globals.h"
 
-namespace qm {
+namespace ov {
 
 struct FeatureData {
     FeatureData();

@@ -9,7 +9,7 @@ const int SAMPLE_COLUMNS_OFFSET = 5;
 const int ANNOTATION_COLUMN_OFFSET = 4;
 const QVariant TABLE_DEFAULT_VALUE = QVariant("0");
 
-namespace qm {
+namespace ov {
 
 FeatureTableModel::FeatureTableModel(QObject *parent, FeatureDataSource *dataSource)
     : QAbstractTableModel(parent), rowNumber(DEFAULT_TABLE_SIZE), columnNumber(DEFAULT_TABLE_SIZE), dataSource(dataSource),

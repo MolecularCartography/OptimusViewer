@@ -3,7 +3,7 @@
 
 #include <QObject>
 
-namespace qm {
+namespace ov {
 
 class FeatureTableModel;
 

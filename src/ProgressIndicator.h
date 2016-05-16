@@ -9,7 +9,7 @@ class ProgressIndicatorUi;
 
 }
 
-namespace qm {
+namespace ov {
 
 class ProgressIndicator : public QDialog
 {

@@ -16,7 +16,7 @@ class AppViewUi;
 
 }
 
-namespace qm {
+namespace ov {
 
 class FeatureTableModel;
 

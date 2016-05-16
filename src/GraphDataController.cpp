@@ -11,7 +11,7 @@
 
 #include "GraphDataController.h"
 
-namespace qm {
+namespace ov {
 
 GraphDataController::GraphDataController(FeatureDataSource *dataSource)
     : dataSource(dataSource)
