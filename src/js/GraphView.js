@@ -150,6 +150,7 @@ function generateXicGraphProto() {
         'balloonFunction': adjustXicBalloonText,
         'bulletField': 'bullet',
         'bulletBorderAlpha': 1,
+        'bulletBorderColor': '#B22222',
         'colorField': 'color',
         'bulletSizeField': 'bulletSize',
         'fillAlphas': 0.7,
@@ -184,7 +185,6 @@ function adjustMassPeakBalloonText(graphDataItem, graph) {
 function xicPointAttributeSetter(point) {
     if (dataController.precursorMzKey in point) {
         point['bullet'] = 'round';
-        point['color'] = '#B22222';
         point['bulletSize'] = 10;
         point[auxPointFlag] = true;
     }
@@ -278,13 +278,13 @@ var xicGraphSelectionState = {
     _selectedCharts: [],
     _alphasByGraph: [],
     _selectionActive: false,
-    _lastUsedColorIndex: -1,
+    _lastUsedColorIndex: 10, // offset to reduce chance of color collision between XICs and fragmentation spectra
 
     reset: function() {
         this._selectedItems = [];
         this._selectedCharts = [];
         this._alphasByGraph = [];
-        this._lastUsedColorIndex = -1;
+        this._lastUsedColorIndex = 10;
         this._selectionActive = false;
     },
 
@@ -305,7 +305,7 @@ var xicGraphSelectionState = {
             }
             this._selectedCharts = [];
             this._selectionActive = false;
-            this._lastUsedColorIndex = -1;
+            this._lastUsedColorIndex = 10;
 
             delete actualPlotData[dataController.msnGraphDescKey];
             delete actualPlotData[dataController.msnGraphDataKey];

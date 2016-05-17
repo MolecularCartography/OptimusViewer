@@ -310,7 +310,7 @@ QString getMetaInfoValue(const QString &key)
     QSqlQuery query;
     query.prepare("SELECT value FROM MetaInfo WHERE key = ?");
     query.addBindValue(key);
-    const ok = query.exec();
+    const bool ok = query.exec();
     Q_ASSERT(ok);
     query.next();
     return query.value(0).toString();
@@ -362,7 +362,7 @@ bool FeatureDataSource::setDataSource(const DataSourceId &dataSourceId)
     }
 
     db.setDatabaseName(dataSourceId);
-    const bool storageAvailable = db.open();
+    bool storageAvailable = db.open();
 
     if (storageAvailable) {
         QSqlQuery prepQuery(
