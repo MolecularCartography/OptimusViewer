@@ -1,5 +1,11 @@
 # OptimusViewer: An application for visualizing LC-MS features detected with [Optimus workflow](https://github.com/alexandrovteam/Optimus).
 
+<img src="img/screenshot.png"/>
+
+## What it does?
+
+OptimusViewer is designed to complement the visualization part of Optimus workflow. OptimusViewer allows one to visualize plots of extracted ion chromatograms (XIC), MS peaks and MS2 spectra corresponding to features detected with Optimus. Moreover, all these plots can be overlaid for different features and/or different LC-MS runs to streamline any comparative analysis.
+
 ## How to build?
 
 1. You will need to install Qt 5.5 on your computer. Perhaps, earlier versions will also work, but it hasn't been tested.
