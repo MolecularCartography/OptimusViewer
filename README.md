@@ -9,6 +9,7 @@ OptimusViewer is designed to complement the visualization part of Optimus workfl
 ## Quick start guide
 
 Go to `Downloads` directory in this repository and download a ZIP archive with the application according to your OS. Unzip the archive and launch `OptimusViewer` executable file.
+*OS X users*: you might have a problem with running the application as it is not distributed via Mac App Store. Follow [this instruction by Apple](https://support.apple.com/kb/PH18657?locale=en_US) to make an exception for OptimusViewer.
 
 Go to `File > Open` and select a "*.db" file produced by Optimus workflow. After the file is loaded, you will see an LC-MS feature quantification matrix where LC-MS runs correspond to columns, and features correspond to rows. The first 5 columns are special: they do not represent any run. Instead, there you can find the following properties of consensus features: numeric feature ID, m/z value, retention time, charge and metabolite annotations (if annotating was performed with Optimus). In the rest of the columns, intensities of features detected in corresponding samples are listed.
  
