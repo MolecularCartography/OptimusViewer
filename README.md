@@ -27,7 +27,7 @@ You can export any plot as an image (multiple formats are available) using a pop
 ## How to build?
 
 1. You will need to install Qt 5.5 on your computer. Perhaps, earlier versions will also work, but it hasn't been tested.
-3. Check out this repository with `git clone https://github.com/iprotsyuk/OptimusViewer`.
+3. Check out this repository with `git clone https://github.com/alexandrovteam/OptimusViewer`.
 After OS-specific steps described below are completed, application binaries can be found in `./OptimusViewer/_release`.
 
 ### Windows
