@@ -33,7 +33,6 @@ public:
 signals:
     void open();
     void exit();
-    void about();
     void exportToCsv(const QVector<int> &visibleColumns);
 
     void graphViewAboutToLoad(QWebView *view);
@@ -51,6 +50,7 @@ private slots:
     void hideColumnTriggered();
     void showHideColumnsTriggered();
     void exportToCsvTriggered();
+    void aboutTriggered();
 
 private:
     void setDefaultSplitterSize();

@@ -118,17 +118,18 @@
         <file>src/js/amcharts/plugins/export/lang/fr.js</file>
         <file>src/js/amcharts/plugins/export/lang/lt.js</file>
         <file>src/js/amcharts/plugins/export/lang/pl.js</file>
-        <file>src/js/splitter/splitter.min.js</file>
-        <file>src/js/splitter/splitter.css</file>
-        <file>src/js/GraphView.js</file>
-        <file>src/html/GraphView.html</file>
-        <file>src/css/GraphView.css</file>
-        <file>src/js/amcharts/xy.js</file>
         <file>src/js/amcharts/themes/dark.js</file>
         <file>src/js/amcharts/themes/black.js</file>
         <file>src/js/amcharts/themes/chalk.js</file>
         <file>src/js/amcharts/themes/light.js</file>
         <file>src/js/amcharts/themes/patterns.js</file>
+        <file>src/js/amcharts/xy.js</file>
         <file>src/js/randomColor/randomColor.js</file>
+        <file>src/js/splitter/splitter.min.js</file>
+        <file>src/js/splitter/splitter.css</file>
+        <file>src/css/GraphView.css</file>
+        <file>src/html/GraphView.html</file>
+        <file>src/html/AboutApp.html</file>
+        <file>src/js/GraphView.js</file>
     </qresource>
 </RCC>

@@ -95,9 +95,25 @@ void AppView::exportToCsvTriggered()
     emit exportToCsv(visibleColumns);
 }
 
+void AppView::aboutTriggered()
+{
+    QFile file(":/ov/src/html/AboutApp.html");
+    bool opened = file.open(QIODevice::ReadOnly);
+    Q_ASSERT(opened);
+
+    QTextStream stream(&file);
+    stream.setCodec("UTF-8");
+    QString info = stream.readAll();
+    file.close();
+
+    info.prepend(QString("OptimusViewer version %1.%2<br><br>").arg(CURRENT_OPTIMUS_VERSION, QDate::fromString(__DATE__, "MMM dd yyyy").toString("yyyy.MM.dd")));
+
+    QMessageBox::information(this, tr("About OptimusViewer"), info);
+}
+
 void AppView::connectGuiSignals()
 {
-    connect(ui->actionAbout, &QAction::triggered, this, &AppView::about);
+    connect(ui->actionAbout, &QAction::triggered, this, &AppView::aboutTriggered);
     connect(ui->actionExit, &QAction::triggered, this, &AppView::exit);
     connect(ui->actionOpen, &QAction::triggered, this, &AppView::open);
     connect(ui->actionExportToCsv, &QAction::triggered, this, &AppView::exportToCsvTriggered);

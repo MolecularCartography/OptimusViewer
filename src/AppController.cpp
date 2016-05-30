@@ -49,7 +49,6 @@ void AppController::connectSingals()
 {
     connect(&view, &AppView::open, &dataSource, &FeatureDataSource::selectDataSource);
     connect(&view, &AppView::exportToCsv, &featureTableExporter, &FeatureTableExporter::exportFeatures);
-    connect(&view, &AppView::about, &QApplication::aboutQt);
     connect(&view, &AppView::exit, &QCoreApplication::quit);
     connect(&view, &AppView::graphViewAboutToLoad, this, &AppController::graphViewAboutToLoad);
     connect(&view, &AppView::featureSelectionChanged, &graphDataController, &GraphDataController::featureSelectionChanged);
