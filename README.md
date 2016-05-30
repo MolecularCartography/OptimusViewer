@@ -33,16 +33,16 @@ After OS-specific steps described below are completed, application binaries can 
 1. Install Microsoft Visual Studio.
 2. Add paths to Qt binaries and `msbuild` tool to `Path` environment variable.
 Example: `C:\Qt\Qt5.5.0\5.5\msvc2013\bin`, `C:\Program Files (x86)\MSBuild\12.0\Bin`.
-3. Execute `.\OptimusViewer\win_msvc_build_release.cmd`.
+3. Set working directory to `OptimusViewer` and execute `.\win_msvc_build_release.cmd`.
 
 ### OS X
 
 1. Install XCode.
 2. Add paths to Qt binaries to `PATH` environment variable:
-  1. Execute `sudo nano /etc/paths/`
+  1. Execute `sudo nano /etc/paths`
   2. Add path to Qt binaries at the end of file.
   Example: `/Users/admin/Qt/5.5/clang_64/bin/`
-3. Execute `sh ./OptimusViewer/osx_clang_build_release.sh`
+3. Set working directory to `OptimusViewer` and execute `sh osx_clang_build_release.sh`
 
 ## License
 

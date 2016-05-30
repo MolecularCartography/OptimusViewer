@@ -1,6 +1,6 @@
-rmdir _debug _release
+rm -rf _debug _release
 qmake ov.pro -r -spec macx-clang CONFIG+=x86_64
-rmdir debug release
+rm -rf debug release
 make clean
 make
-macdeployqt _release
+macdeployqt _release/OptimusViewer.app
