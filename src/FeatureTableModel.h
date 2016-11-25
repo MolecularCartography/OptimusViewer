@@ -31,6 +31,8 @@ public:
 
     SampleId getSampleIdByColumnNumber(int column) const;
 
+    int countOfGeneralDataColumns() const;
+
 signals:
     void setIndexWidget(const QModelIndex &index, QWidget *w);
 
@@ -62,6 +64,6 @@ private:
     QSqlError error;
 };
 
-} // namespace qm
+} // namespace ov
 
 #endif // FEATURE_TABLE_MODEL_H

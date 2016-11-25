@@ -2,6 +2,7 @@
 #define FEATUREDATASOURCE_H
 
 #include <QObject>
+#include <QSet>
 #include <QSqlDatabase>
 #include <QVector>
 
@@ -32,6 +33,7 @@ public:
     qint64 getSampleCount() const;
 
     FeatureId getFeatureIdByNumber(int number) const;
+    QHash<FeatureId, QStringList> getFeatureCompoundIds(const QSet<FeatureId> &ids) const;
     qint64 getFeatureCount() const;
 
 signals:
@@ -62,6 +64,6 @@ private:
     QSqlDatabase db;
 };
 
-} // namespace qm
+} // namespace ov
 
 #endif // FEATUREDATASOURCE_H

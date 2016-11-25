@@ -8,4 +8,4 @@ Ms2ScanInfo::Ms2ScanInfo(qreal scanTime, qreal precursorMz, const FragmentationS
 
 }
 
-} // namespace qm
+} // namespace ov

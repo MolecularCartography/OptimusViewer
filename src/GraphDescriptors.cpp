@@ -26,8 +26,9 @@ QString BaseGraphDescriptor::getYField() const
 /// Ms1GraphDescriptor
 //////////////////////////////////////////////////////////////////////////
 
-Ms1GraphDescriptor::Ms1GraphDescriptor(const SampleId &sampleId, const FeatureId &featureId, const QString &sampleName, qreal consensusMz)
-    : BaseGraphDescriptor(QString("%1_%2").arg(sampleId).arg(featureId)), sampleId(sampleId), featureId(featureId), sampleName(sampleName), consensusMz(consensusMz)
+Ms1GraphDescriptor::Ms1GraphDescriptor(const SampleId &sampleId, const FeatureId &featureId, const QString &sampleName, qreal consensusMz, const QStringList &compoundIds)
+    : BaseGraphDescriptor(QString("%1_%2").arg(sampleId).arg(featureId)), sampleId(sampleId),
+    featureId(featureId), sampleName(sampleName), consensusMz(consensusMz), compoundIds(compoundIds)
 {
 
 }
@@ -36,8 +37,9 @@ Ms1GraphDescriptor::Ms1GraphDescriptor(const SampleId &sampleId, const FeatureId
 /// XicGraphDescriptor
 //////////////////////////////////////////////////////////////////////////
 
-XicGraphDescriptor::XicGraphDescriptor(const SampleId &sampleId, const FeatureId &featureId, const QString &sampleName, qreal consensusMz, qreal rtStart, qreal rtEnd)
-    : Ms1GraphDescriptor(sampleId, featureId, sampleName, consensusMz), rtStart(rtStart), rtEnd(rtEnd)
+XicGraphDescriptor::XicGraphDescriptor(const SampleId &sampleId, const FeatureId &featureId, const QString &sampleName,
+    qreal consensusMz, const QStringList &compoundIds, qreal rtStart, qreal rtEnd)
+    : Ms1GraphDescriptor(sampleId, featureId, sampleName, consensusMz, compoundIds), rtStart(rtStart), rtEnd(rtEnd)
 {
 
 }
@@ -52,4 +54,4 @@ MsnGraphDescriptor::MsnGraphDescriptor(const FragmentationSpectrumId &specId)
 
 }
 
-} // namespace qm
+} // namespace ov

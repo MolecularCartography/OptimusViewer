@@ -73,4 +73,4 @@ void AppController::graphViewAboutToLoad(QWebView *view)
     connect(view->page()->mainFrame(), &QWebFrame::javaScriptWindowObjectCleared, this, &AppController::graphDataControllerRequested);
 }
 
-} // namespace qm
+} // namespace ov

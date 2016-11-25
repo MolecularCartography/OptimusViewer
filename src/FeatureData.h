@@ -23,6 +23,6 @@ struct FeatureData {
     qreal featureEnd;
 };
 
-} // namespace qm
+} // namespace ov
 
 #endif // FEATURE_DATA_H

@@ -28,6 +28,7 @@ class GraphDataController: public QObject
 
     Q_PROPERTY(QString sampleNameGraphKey READ getSampleNameGraphKey)
     Q_PROPERTY(QString consensusMzGraphKey READ getConsensusMzGraphKey)
+    Q_PROPERTY(QString compoundIdGraphKey READ getCompoundIdGraphKey)
 
     Q_PROPERTY(QString featureStartGraphKey READ getFeatureStartGraphKey)
     Q_PROPERTY(QString featureEndGraphKey READ getFeatureEndGraphKey)
@@ -55,6 +56,7 @@ public:
 
     QString getSampleNameGraphKey() const;
     QString getConsensusMzGraphKey() const;
+    QString getCompoundIdGraphKey() const;
 
     QString getFeatureStartGraphKey() const;
     QString getFeatureEndGraphKey() const;
@@ -87,6 +89,6 @@ private:
     FeatureDataSource *dataSource;
 };
 
-} // namespace qm
+} // namespace ov
 
 #endif // GRAPHDATACONTROLLER_H

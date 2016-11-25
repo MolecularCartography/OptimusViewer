@@ -8,7 +8,9 @@ HEADERS += src/AppController.h \
            src/FeatureTableExporter.h \
            src/FeatureTableItemDelegate.h \
            src/FeatureTableModel.h \
+           src/FeatureTableProxyModel.h \
            src/FeatureTableVisibilityDialog.h \
+           src/FeatureTableWidget.h \
            src/Globals.h \
            src/GraphDataController.h \
            src/GraphDescriptors.h \
@@ -30,7 +32,9 @@ SOURCES += src/AppController.cpp \
            src/FeatureTableExporter.cpp \
            src/FeatureTableItemDelegate.cpp \
            src/FeatureTableModel.cpp \
+           src/FeatureTableProxyModel.cpp \
            src/FeatureTableVisibilityDialog.cpp \
+           src/FeatureTableWidget.cpp \
            src/Globals.cpp \
            src/GraphDataController.cpp \
            src/GraphDescriptors.cpp \

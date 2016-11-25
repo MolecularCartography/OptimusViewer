@@ -17,4 +17,4 @@ void FeatureTableItemDelegate::paint(QPainter *painter, const QStyleOptionViewIt
     }
 }
 
-} // namespace qm
+} // namespace ov

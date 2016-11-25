@@ -31,6 +31,6 @@ private:
     QMap<Attribute, QVariant> attrs;
 };
 
-} // namespace qm
+} // namespace ov
 
 #endif // GRAPHPOINT_H

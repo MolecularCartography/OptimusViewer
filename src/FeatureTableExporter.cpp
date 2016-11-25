@@ -42,4 +42,4 @@ void FeatureTableExporter::exportFeatures(const QVector<int> &visibleColumns)
     }
 }
 
-} // namespace qm
+} // namespace ov

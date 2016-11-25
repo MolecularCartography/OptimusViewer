@@ -38,6 +38,6 @@ private:
     FeatureTableExporter featureTableExporter;
 };
 
-} // namespace qm
+} // namespace ov
 
 #endif // APPCONTROLLER_H

@@ -99,4 +99,4 @@ void FeatureTableVisibilityDialog::accept()
     }
 }
 
-} // namespace qm
+} // namespace ov

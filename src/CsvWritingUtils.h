@@ -13,6 +13,6 @@ bool saveTableToFile(const QList<QStringList> &table, const QString &path);
 
 } // namespace CsvWritingUtils
 
-} // namespace qm
+} // namespace ov
 
 #endif // CSV_WRITING_UTILS_H

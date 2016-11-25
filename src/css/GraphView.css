@@ -16,7 +16,7 @@ body {
     position: absolute !important;
     top: 0;
     left: 0;
-    bottom: 65px;
+    bottom: 75px;
     display: inline-block;
     width: 99%;
 }
@@ -26,7 +26,7 @@ body {
     bottom: 0px;
     left: 0;
     width: 100%;
-    height: 65px !important;
+    height: 75px !important;
     border-top: 2px solid #888;
 }
 

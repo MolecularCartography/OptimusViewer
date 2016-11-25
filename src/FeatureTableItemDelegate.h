@@ -16,6 +16,6 @@ private:
     QAbstractItemView *view;
 };
 
-} // namespace qm
+} // namespace ov
 
 #endif // FEATURE_TABLE_ITEM_DELEGATE_H

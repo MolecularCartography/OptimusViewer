@@ -28,6 +28,11 @@ void FeatureTableModel::updateColumnNumber()
     columnNumber = SAMPLE_COLUMNS_OFFSET + dataSource->getSampleCount();
 }
 
+int FeatureTableModel::countOfGeneralDataColumns() const
+{
+    return SAMPLE_COLUMNS_OFFSET;
+}
+
 void FeatureTableModel::updateFeatureCount()
 {
     featureObservationCount.clear();
@@ -51,7 +56,7 @@ void FeatureTableModel::updateFeatureAnnotationRows()
         "FROM Annotation AS A "
         "LEFT OUTER JOIN AnnotationWebLink AS AWL ON AWL.annotation_id = A.id "
         "LEFT OUTER JOIN CompoundWebLink AS CWL ON AWL.link_id = CWL.id) AS sub "
-        "WHERE FA.feature_id = F.id AND FA.annotation_id = sub.ann_id ORDER BY F.consensus_mz, F.id");
+        "WHERE FA.feature_id = F.id AND FA.annotation_id = sub.ann_id ORDER BY F.id");
 
     FeatureId lastFeatureId = -1;
     qint64 recordNumber = 0;
@@ -82,7 +87,7 @@ void FeatureTableModel::reset()
     updateFeatureCount();
     invalidateCache();
 
-    consensusFeatureFetcher = QSqlQuery("SELECT id, consensus_mz, consensus_rt, consensus_charge FROM Feature ORDER BY consensus_mz, id");
+    consensusFeatureFetcher = QSqlQuery("SELECT id, consensus_mz, consensus_rt, consensus_charge FROM Feature ORDER BY id");
     intensityFetcher = QSqlQuery("SELECT feature_id, sample_id, intensity FROM SampleFeature ORDER BY feature_id, sample_id");
 
     updateFeatureAnnotationRows();
@@ -221,7 +226,7 @@ QVariant FeatureTableModel::dataInternal(const QModelIndex &index, int role)
     if (column < ANNOTATION_COLUMN_OFFSET) {
         consensusFeatureFetcher.seek(row);
         result = consensusFeatureFetcher.value(column);
-    } else if (column < SAMPLE_COLUMNS_OFFSET) {
+    } else if (column == ANNOTATION_COLUMN_OFFSET) {
         result = compoundIdColumnData(index);
     } else {
         const FeatureId rowId = dataSource->getFeatureIdByNumber(row);
@@ -263,4 +268,4 @@ QVariant FeatureTableModel::headerData(int section, Qt::Orientation orientation,
     }
 }
 
-} // namespace qm
+} // namespace ov

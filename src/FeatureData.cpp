@@ -2,6 +2,9 @@
 
 #include "FeatureData.h"
 
+
+const qreal RT_TOLERANCE = 0.001;
+
 namespace ov {
 
 FeatureData::FeatureData()
@@ -49,7 +52,19 @@ QList<QPointF> FeatureData::getXic() const
 
 QList<QPointF> FeatureData::getMassPeaks() const
 {
-    return projectMassTraces2D(massTraces, [](const QVector3D &p) { return QPointF(p.x(), p.z()); });
+    QList<QList<QVector3D> > reducedMassTraces;
+    foreach (const QList<QVector3D> &massTrace, massTraces) {
+        QList<QVector3D> reducedMassTrace;
+        foreach (const QVector3D &p, massTrace) {
+            if (featureStart - RT_TOLERANCE <= p.y() && featureEnd + RT_TOLERANCE >= p.y()) {
+                reducedMassTrace.append(p);
+            }
+        }
+        if (!reducedMassTrace.isEmpty()) {
+            reducedMassTraces.append(reducedMassTrace);
+        }
+    }
+    return projectMassTraces2D(reducedMassTraces, [](const QVector3D &p) { return QPointF(p.x(), p.z()); });
 }
 
-} // namespace qm
+} // namespace ov

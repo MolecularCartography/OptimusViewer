@@ -267,4 +267,4 @@ void GraphExporter::exportGraph(const QString &graphId, const FormatId &initialF
 }
 
 
-} // namespace qm
+} // namespace ov

@@ -41,6 +41,6 @@ private:
     Ui::FeatureTableVisibilityDialogUi *ui;
 };
 
-} // namespace qm
+} // namespace ov
 
 #endif // FEATURETABLEVISIBILITYDIALOG_H

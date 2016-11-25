@@ -20,6 +20,6 @@ private:
     const FeatureTableModel &model;
 };
 
-} // namespace qm
+} // namespace ov
 
 #endif // FEATURE_TABLE_EXPORTER_H

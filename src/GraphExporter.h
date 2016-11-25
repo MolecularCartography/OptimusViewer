@@ -51,6 +51,6 @@ private:
     static const QList<FormatId> supportedDataFormatIds;
 };
 
-} // namespace qm
+} // namespace ov
 
 #endif // GRAPHEXPORTER_H

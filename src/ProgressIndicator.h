@@ -26,6 +26,6 @@ private:
     Ui::ProgressIndicatorUi *ui;
 };
 
-} // namespace qm
+} // namespace ov
 
 #endif // PROGRESSINDICATOR_H

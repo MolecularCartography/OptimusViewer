@@ -13,6 +13,6 @@ struct Ms2ScanInfo {
     FragmentationSpectrumId spectrumId;
 };
 
-} // namespace qm
+} // namespace ov
 
 #endif // MS2_SCAN_INFO_H

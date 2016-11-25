@@ -208,15 +208,23 @@ function isAuxPoint(point) {
 }
 
 function generateMs1GraphTitle(graphDescriptor) {
-    return 'Feature ID: ' + graphDescriptor[dataController.featureIdKey]
-        + '<br>Consensus m/z: ' + graphDescriptor[dataController.consensusMzGraphKey].round(4)
+    var title = 'Feature ID: ' + graphDescriptor[dataController.featureIdKey];
+    if (graphDescriptor[dataController.compoundIdGraphKey].length > 0) {
+        title += '<br>Compound ID: ' + graphDescriptor[dataController.compoundIdGraphKey].join('; ');
+    }
+    title += '<br>Consensus m/z: ' + graphDescriptor[dataController.consensusMzGraphKey].round(4)
         + '<br>Sample: ' + graphDescriptor[dataController.sampleNameGraphKey];
+    return title;
 }
 
 function generateMs2GraphTitle(graphDescriptor) {
-    return 'Precursor m/z: ' + graphDescriptor[dataController.precursorMzKey]
-        + '<br>Sample: ' + graphDescriptor[dataController.sampleNameGraphKey]
+    var title = 'Precursor m/z: ' + graphDescriptor[dataController.precursorMzKey];
+    if (graphDescriptor[dataController.compoundIdGraphKey].length > 0) {
+        title += '<br>Compound ID: ' + graphDescriptor[dataController.compoundIdGraphKey].join('; ');
+    }
+    title += '<br>Sample: ' + graphDescriptor[dataController.sampleNameGraphKey]
         + '<br>Scan start time: ' + graphDescriptor[scanStartKey] + ' s';
+    return title;
 }
 
 function getGraphs(graphDescriptors, points, graphProtoGenerator, horizontalOffset, stickPlot, pointAttributeSetter, graphTitleGenarator) {
@@ -398,6 +406,7 @@ var xicGraphSelectionState = {
             graphDescriptors[graphId][dataController.precursorMzKey] = xicPoint[dataController.precursorMzKey].round(4);
             graphDescriptors[graphId][scanStartKey] = xicPoint[xicGraphDescriptor[dataController.xFieldKey]].round(2);
             graphDescriptors[graphId][dataController.sampleNameGraphKey] = xicGraphDescriptor[dataController.sampleNameGraphKey];
+            graphDescriptors[graphId][dataController.compoundIdGraphKey] = xicGraphDescriptor[dataController.compoundIdGraphKey];
             graphDescriptors[graphId][graphColorKey] = xicPointColor;
         }
         actualPlotData[dataController.msnGraphDescKey] = graphDescriptors;

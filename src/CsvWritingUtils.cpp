@@ -47,4 +47,4 @@ bool saveTableToFile(const QList<QStringList> &table, const QString &path)
 
 } // namespace CsvWritingUtils
 
-} // namespace qm
+} // namespace ov

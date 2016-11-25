@@ -28,4 +28,4 @@ QVariant GraphPoint::getAttribute(GraphPoint::Attribute attr) const
     return attrs.value(attr);
 }
 
-} // namespace qm
+} // namespace ov

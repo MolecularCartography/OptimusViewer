@@ -27,6 +27,7 @@ QVariantMap GraphDataController::ms1graphDescriptionToMap(const Ms1GraphDescript
     result[getSampleNameGraphKey()] = graphDescription.sampleName;
     result[getConsensusMzGraphKey()] = graphDescription.consensusMz;
     result[getFeatureIdKey()] = graphDescription.featureId;
+    result[getCompoundIdGraphKey()] = graphDescription.compoundIds;
     return result;
 }
 
@@ -92,9 +93,11 @@ void GraphDataController::featureSelectionChanged(const QMultiHash<SampleId, Fea
     QVariantList xicGraph;
     QVariantList ms1Graph;
     QVariantMap ms1GraphDescriptions;
+    const QHash<FeatureId, QStringList> featureAnnotations = dataSource->getFeatureCompoundIds(newSelection.values().toSet());
     foreach (const FeatureData &fd, features) {
         // add XIC graph info
-        XicGraphDescriptor xicGraphDescription(fd.sampleId, fd.featureId, dataSource->getSampleNameById(fd.sampleId), featureMzs[fd.featureId], fd.featureStart, fd.featureEnd);
+        XicGraphDescriptor xicGraphDescription(fd.sampleId, fd.featureId, dataSource->getSampleNameById(fd.sampleId), featureMzs[fd.featureId],
+            featureAnnotations[fd.featureId], fd.featureStart, fd.featureEnd);
         xicGraphDescriptions[xicGraphDescription.graphId] = xicGraphDescriptionToMap(xicGraphDescription);
 
         const QList<QPointF> xicPoints = fd.getXic();
@@ -107,7 +110,8 @@ void GraphDataController::featureSelectionChanged(const QMultiHash<SampleId, Fea
 
             const bool beforeMs1 = xicIndex == 0;
             const QPointF &prevXicPoint = beforeMs1 ? QPointF(0.0, 0.0) : xicPoints[xicIndex - 1];
-            addMs2ScanPointToGraph(prevXicPoint, xicPoint, beforeMs1, false, ms2ScanPoints, xicGraphDescription, nextMs2Index, moreMs2Points, xicGraph);
+            addMs2ScanPointToGraph(prevXicPoint, xicPoint, beforeMs1, false, ms2ScanPoints,
+                xicGraphDescription, nextMs2Index, moreMs2Points, xicGraph);
 
             QVariantMap variantPlotData;
             variantPlotData[xicGraphDescription.getXField()] = xicPoint.x();
@@ -118,11 +122,13 @@ void GraphDataController::featureSelectionChanged(const QMultiHash<SampleId, Fea
         // ms2 scans after ms1 finished for this feature
         if (moreMs2Points) {
             const QPointF infinityPoint = QPointF(std::numeric_limits<qreal>::max(), 0.0);
-            addMs2ScanPointToGraph(xicPoints.last(), infinityPoint, false, true, ms2ScanPoints, xicGraphDescription, nextMs2Index, moreMs2Points, xicGraph);
+            addMs2ScanPointToGraph(xicPoints.last(), infinityPoint, false, true, ms2ScanPoints,
+                xicGraphDescription, nextMs2Index, moreMs2Points, xicGraph);
         }
 
         // add mass peak graph info
-        Ms1GraphDescriptor massGraphDescription(fd.sampleId, fd.featureId, dataSource->getSampleNameById(fd.sampleId), featureMzs[fd.featureId]);
+        Ms1GraphDescriptor massGraphDescription(fd.sampleId, fd.featureId, dataSource->getSampleNameById(fd.sampleId),
+            featureMzs[fd.featureId], featureAnnotations[fd.featureId]);
         ms1GraphDescriptions[massGraphDescription.graphId] = ms1graphDescriptionToMap(massGraphDescription);
 
         foreach (const QPointF &ms1Point, fd.getMassPeaks()) {
@@ -209,6 +215,11 @@ QString GraphDataController::getConsensusMzGraphKey() const
     return "consensus_mz";
 }
 
+QString GraphDataController::getCompoundIdGraphKey() const
+{
+    return "compound_id";
+}
+
 QString GraphDataController::getFeatureStartGraphKey() const
 {
     return "feature_start";
@@ -260,4 +271,4 @@ void GraphDataController::samplesChanged()
     emit updatePlot(emptyData);
 }
 
-} // namespace qm
+} // namespace ov

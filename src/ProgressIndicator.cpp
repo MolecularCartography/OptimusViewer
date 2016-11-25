@@ -27,4 +27,4 @@ void ProgressIndicator::finished()
     hide();
 }
 
-} // namespace qm
+} // namespace ov

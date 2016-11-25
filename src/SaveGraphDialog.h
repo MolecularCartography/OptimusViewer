@@ -36,6 +36,6 @@ private:
     QList<QWidget *> scaleControllers;
 };
 
-} // namespace qm
+} // namespace ov
 
 #endif // SAVEGRAPHDIALOG_H

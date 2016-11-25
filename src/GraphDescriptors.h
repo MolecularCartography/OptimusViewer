@@ -25,12 +25,13 @@ struct BaseGraphDescriptor
 
 struct Ms1GraphDescriptor: public BaseGraphDescriptor
 {
-    Ms1GraphDescriptor(const SampleId &sampleId, const FeatureId &featureId, const QString &sampleName, qreal consensusMz);
+    Ms1GraphDescriptor(const SampleId &sampleId, const FeatureId &featureId, const QString &sampleName, qreal consensusMz, const QStringList &compoundIds);
 
     const SampleId sampleId;
     const FeatureId featureId;
     const QString sampleName;
     qreal consensusMz;
+    const QStringList compoundIds;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -39,7 +40,8 @@ struct Ms1GraphDescriptor: public BaseGraphDescriptor
 
 struct XicGraphDescriptor : public Ms1GraphDescriptor
 {
-    XicGraphDescriptor(const SampleId &sampleId, const FeatureId &featureId, const QString &sampleName, qreal consensusMz, qreal rtStart, qreal rtEnd);
+    XicGraphDescriptor(const SampleId &sampleId, const FeatureId &featureId, const QString &sampleName,
+        qreal consensusMz, const QStringList &compoundIds, qreal rtStart, qreal rtEnd);
 
     const qreal rtStart;
     const qreal rtEnd;
@@ -56,6 +58,6 @@ struct MsnGraphDescriptor: public BaseGraphDescriptor
     const FragmentationSpectrumId specId;
 };
 
-} // namespace qm
+} // namespace ov
 
 #endif // GRAPH_DESCRIPTORS_H

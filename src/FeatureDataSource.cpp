@@ -266,6 +266,34 @@ FeatureId FeatureDataSource::getFeatureIdByNumber(int number) const
     }
 }
 
+QHash<FeatureId, QStringList> FeatureDataSource::getFeatureCompoundIds(const QSet<FeatureId> &ids) const
+{
+    // Limit on number of SQLite query parameters
+    // TODO: consider splitting the query into multiple ones.
+    if (ids.isEmpty() || ids.size() > QUERY_PARAMS_LIMIT) {
+        return QHash<FeatureId, QStringList>();
+    }
+
+    QSqlQuery annotationsQuery;
+    QString queryText("SELECT feature_id, compound_id FROM Annotation, FeatureAnnotation WHERE annotation_id = id AND feature_id IN (");
+    queryText.append(QString("?,").repeated(ids.size()));
+    queryText.replace(queryText.length() - 1, 1, ")");
+    annotationsQuery.prepare(queryText);
+    foreach (const FeatureId &id, ids) {
+        annotationsQuery.addBindValue(id);
+    }
+    const bool ok = annotationsQuery.exec();
+    Q_ASSERT(ok);
+    QHash<FeatureId, QStringList> result;
+    foreach (const FeatureId &fId, ids) {
+        result[fId] = QStringList();
+    }
+    while (annotationsQuery.next()) {
+        result[annotationsQuery.value(0).value<FeatureId>()].append(annotationsQuery.value(1).toString());
+    }
+    return result;
+}
+
 qint64 FeatureDataSource::getFeatureCount() const
 {
     return featureIds.size();
@@ -287,7 +315,7 @@ void FeatureDataSource::updateFeaturesInfo()
 {
     featureIds.clear();
 
-    QSqlQuery featuresQuery("SELECT id FROM Feature ORDER BY consensus_mz");
+    QSqlQuery featuresQuery("SELECT id FROM Feature ORDER BY id");
     while (featuresQuery.next()) {
         featureIds.append(featuresQuery.value(0).value<FeatureId>());
     }
@@ -389,4 +417,4 @@ QString FeatureDataSource::getInputFileFilter()
     return QObject::tr("Optimus database (*.db)");
 }
 
-} // namespace qm
+} // namespace ov

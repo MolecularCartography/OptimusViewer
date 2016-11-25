@@ -31,6 +31,6 @@ extern const QList<FormatId> dataFormats;
 
 }
 
-} // namespace qm
+} // namespace ov
 
 #endif // GLOBALS_H

@@ -19,6 +19,7 @@ class AppViewUi;
 namespace ov {
 
 class FeatureTableModel;
+class FeatureTableWidget;
 
 class AppView : public QMainWindow
 {
@@ -46,11 +47,9 @@ public slots:
 private slots:
     void graphViewLoaded(bool ok);
     void featureTableSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
-    void featureTableHeaderContextMenu(const QPoint &p);
-    void hideColumnTriggered();
-    void showHideColumnsTriggered();
     void exportToCsvTriggered();
     void aboutTriggered();
+    void filterTableTriggered();
 
 private:
     void setDefaultSplitterSize();
@@ -62,13 +61,12 @@ private:
     FeatureTableModel * getFeatureTableModel() const;
 
     bool graphViewInited;
-    QAction *hideColumnAction;
-    QAction *showHideColumnsAction;
-    int lastReferredLogicalColumn;
+    QAction *filterTableAction;
 
+    FeatureTableWidget *featureTableView;
     Ui::AppViewUi *ui;
 };
 
-} // namespace qm
+} // namespace ov
 
 #endif // APPVIEW_H
