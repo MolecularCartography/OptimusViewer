@@ -1,5 +1,8 @@
 #include <QApplication>
+#include <QBuffer>
+#include <QClipboard>
 #include <QMessageBox>
+#include <QMimeData>
 #include <QPrinter>
 #include <QScopedPointer>
 #include <QSvgGenerator>
@@ -109,8 +112,18 @@ void GraphExporter::saveGraphAsImage(const GraphId &id, const FormatId &formatId
     painter.scale(legendScalingFactor, legendScalingFactor);
     legendElement.render(&painter);
 
-    if (!image.save(path, formatId.toLocal8Bit().constData(), quality)) {
+    if (!path.isEmpty() && !image.save(path, formatId.toLocal8Bit().constData(), quality)) {
         QMessageBox::critical(QApplication::activeWindow(), tr("Error"), tr("Unable to save the file. Perhaps, it is being used by another process."));
+    } else if (path.isEmpty()) {
+        QClipboard *clipboard = QApplication::clipboard();
+        QMimeData *mimeData = new QMimeData();
+        QByteArray data;
+        QBuffer buffer(&data);
+        buffer.open(QIODevice::WriteOnly);
+        image.save(&buffer, "PNG");
+        buffer.close();
+        mimeData->setData("PNG", data);
+        clipboard->setMimeData(mimeData);
     }
 }
 
@@ -235,6 +248,11 @@ void GraphExporter::saveGraphAsCsv(const GraphId &id, const QString &path, const
 
 void GraphExporter::exportGraph(const QString &graphId, const FormatId &initialFormatId, const QVariantList &graphPoints)
 {
+    if (initialFormatId == "Clipboard") {
+        saveGraphAsImage(graphId, initialFormatId, QString(), 100, 1);
+        return;
+    }
+
     QScopedPointer<SaveGraphDialog> saveDialog(new SaveGraphDialog(QApplication::activeWindow(), initialFormatId));
     QString path;
     FormatId finalFormatId;

@@ -23,7 +23,7 @@ QString getHtmlContainerIdForGraph(const GraphId &id)
 
 namespace ExportFormats {
 
-const QList<FormatId> lossyImageFormats = QList<FormatId>() << "PNG" << "JPG";
+const QList<FormatId> lossyImageFormats = QList<FormatId>() << "Clipboard" << "PNG" << "JPG";
 const QList<FormatId> losslessImageFormats = QList<FormatId>() << "BMP";
 const QList<FormatId> resizableVectorImageFormats = QList<FormatId>() << "SVG";
 const QList<FormatId> fixedSizeVectorImageFormats = QList<FormatId>() << "PDF";
