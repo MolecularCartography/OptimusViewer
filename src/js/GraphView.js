@@ -13,6 +13,7 @@ var graphYFieldKey = 'yField';
 var graphColorKey = 'lineColor';
 
 var actualPlotData = {};
+var xicPlotFilling = true;
 
 var graphColors = {
     _colorGenerationSize: 10,
@@ -29,7 +30,7 @@ var graphColors = {
     }
 };
 
-function clone(obj) {
+function cloneObject(obj) {
     if (null == obj || 'object' != typeof obj) return obj;
     var copy = obj.constructor();
     for (var attr in obj) {
@@ -118,18 +119,45 @@ function generateFormatListMenu(chartId, formats) {
     return menuItems;
 }
 
-function generatePlotExportDescriptor(graphId) {
+function generatePlotExportDescriptor(graphId, switchRenderingMode) {
+    var menuItems = [{
+        'label': 'Save image...',
+        'menu': generateFormatListMenu(graphId, imageFormats)
+    }, {
+        'label': 'Save plot data...',
+        'menu': generateFormatListMenu(graphId, dataFormats)
+    }];
+
+    if (switchRenderingMode) {
+        menuItems.unshift({
+            'label': 'Visualization mode',
+            'menu': [{
+                'label': 'Filling',
+                'click': function (event, menuItem) {
+                    if (!xicPlotFilling) {
+                        updateXicChartData(actualPlotData[dataController.xicGraphDescKey],
+                            actualPlotData[dataController.xicGraphDataKey].slice(0), true);
+                        xicPlotFilling = true;
+                    }
+                }
+            }, {
+                'label': 'Peaks',
+                'click': function (event, menuItem) {
+                    if (xicPlotFilling) {
+                        updateXicChartData(actualPlotData[dataController.xicGraphDescKey],
+                            actualPlotData[dataController.xicGraphDataKey].slice(0), false);
+                        xicPlotFilling = false;
+                    }
+                }
+            }]
+        });
+    }
+
     return {
         'enabled': true,
         'menu': [{
             'class': 'export-main',
-            'menu': [{
-                'label': 'Save image...',
-                'menu': generateFormatListMenu(graphId, imageFormats)
-            }, {
-                'label': 'Save plot data...',
-                'menu': generateFormatListMenu(graphId, dataFormats)
-            }]
+            'menu': menuItems
         }]
     };
 }
@@ -196,7 +224,13 @@ function massPointAttributeSetter(point) {
 }
 
 function createAuxGroundPoint(point, valueAxisKey, categoryAxisKey, categoryOffset) {
-    var auxPoint = clone(point);
+    var auxPoint = cloneObject(point);
+
+    delete auxPoint[dataController.precursorMzKey];
+    delete auxPoint['bulletField']
+    delete auxPoint['bullet'];
+    delete auxPoint['bulletSize'];
+
     auxPoint[categoryAxisKey] += categoryOffset;
     auxPoint[valueAxisKey] = 0.0;
     auxPoint[auxPointFlag] = true;
@@ -240,7 +274,14 @@ function getGraphs(graphDescriptors, points, graphProtoGenerator, horizontalOffs
         var curGraphId = curPoint[dataController.graphIdKey];
         var curGraphDescriptor = graphDescriptors[curGraphId];
 
+        var xField = curGraphDescriptor[dataController.xFieldKey];
+        var yField = curGraphDescriptor[dataController.yFieldKey];
+
         if (isAuxPoint(curPoint)) {
+            if (stickPlot && dataController.precursorMzKey in curPoint) {
+                points.splice(i++, 0, createAuxGroundPoint(curPoint, yField, xField, 0));
+                points.splice(++i, 0, createAuxGroundPoint(curPoint, yField, xField, 0));
+            }
             continue;
         }
 
@@ -262,8 +303,6 @@ function getGraphs(graphDescriptors, points, graphProtoGenerator, horizontalOffs
             lastGraphId = curGraphId;
         }
 
-        var xField = curGraphDescriptor[dataController.xFieldKey];
-        var yField = curGraphDescriptor[dataController.yFieldKey];
         if (addOffsetBefore) {
             points.splice(i++, 0, createAuxGroundPoint(curPoint, yField, xField, -horizontalOffset));
         }
@@ -524,7 +563,7 @@ function createXicChart(div_id, dataProvider, graphs, guides) {
         'marginLeft': 60,
         'marginBottom': 60,
         'marginRight': 60,
-        'export': generatePlotExportDescriptor(graphExporter.xicChartId),
+        'export': generatePlotExportDescriptor(graphExporter.xicChartId, true),
         'responsive': {
             'enabled': true
         },
@@ -610,7 +649,7 @@ function createMassPeakChart(div_id, dataProvider, graphs, fragmentationSpectra)
             'title': 'Ion count',
             'labelFunction': formatNumberAsExponential
         }],
-        'export': generatePlotExportDescriptor(graphExporter.massPeakChartId),
+        'export': generatePlotExportDescriptor(graphExporter.massPeakChartId, false),
         'responsive': {
             'enabled': true
         }
@@ -639,23 +678,26 @@ function updateMassChartData(graphDescriptors, points, fragmentationSpectra) {
         massPeakChart.clear();
     }
 
-    chartsById[graphExporter.massPeakChartId] = createMassPeakChart('mass_peak_container', points, massGraphs, fragmentationSpectra);
+    chartsById[graphExporter.massPeakChartId] = createMassPeakChart('mass_peak_container',
+        points, massGraphs, fragmentationSpectra);
 }
 
-function updateChartData(data) {
+function updateXicChartData(graphDescriptors, points, plotFilling) {
     xicGraphSelectionState.reset();
-    actualPlotData = data;
-
-    var xicGraphs = getGraphs(data[dataController.xicGraphDescKey], data[dataController.xicGraphDataKey],
-        generateXicGraphProto, 0, false, xicPointAttributeSetter, generateMs1GraphTitle);
+    var xicGraphs = getGraphs(graphDescriptors, points, generateXicGraphProto,
+        0, !plotFilling, xicPointAttributeSetter, generateMs1GraphTitle);
 
     var xicChart = chartsById[graphExporter.xicChartId];
     if (null !== xicChart) {
         xicChart.clear();
     }
-    chartsById[graphExporter.xicChartId] = createXicChart('xic_container', data[dataController.xicGraphDataKey],
-        xicGraphs, createXicGuides(xicGraphs, data[dataController.xicGraphDescKey]));
+    chartsById[graphExporter.xicChartId] = createXicChart('xic_container', points,
+        xicGraphs, createXicGuides(xicGraphs, graphDescriptors));
+}
 
+function updateChartData(data) {
+    actualPlotData = data;
+    updateXicChartData(data[dataController.xicGraphDescKey], data[dataController.xicGraphDataKey].slice(0), xicPlotFilling);
     updateMassChartData(data[dataController.ms1GraphDescKey], data[dataController.ms1GraphDataKey], false);
 }
 
