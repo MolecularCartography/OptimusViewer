@@ -47,18 +47,16 @@ QVariantMap GraphDataController::msngraphDescriptionToMap(const MsnGraphDescript
     return result;
 }
 
-void GraphDataController::addMs2ScanPointToGraph(const QPointF &prevXicPoint, const QPointF &nextXicPoint, bool isBeforeMs1, bool isAfterMs1,
-    const QList<Ms2ScanInfo> &ms2ScanPoints, const Ms1GraphDescriptor &graphDescription, int &nextMs2Index, bool &moreMs2Points, QVariantList &xicGraph)
+void GraphDataController::addMs2ScanPointToGraph(const QPointF &nextXicPoint, const QList<Ms2ScanInfo> &ms2ScanPoints,
+    const Ms1GraphDescriptor &graphDescription, int &nextMs2Index, bool &moreMs2Points, QVariantList &xicGraph)
 {
     // Check if ms2 scan happened before @xicPoint, and if it did, add it to the plot
     if (moreMs2Points && ms2ScanPoints[nextMs2Index].scanTime < nextXicPoint.x()) {
         const Ms2ScanInfo *ms2Point = &ms2ScanPoints[nextMs2Index];
         do {
-            const qreal intensityDelta = isBeforeMs1 ? 0.0 : isAfterMs1 ? -prevXicPoint.y() : (nextXicPoint.y() - prevXicPoint.y()) * (ms2Point->scanTime - prevXicPoint.x()) / (nextXicPoint.x() - prevXicPoint.x());
-
             QVariantMap variantPlotData;
             variantPlotData[graphDescription.getXField()] = ms2Point->scanTime;
-            variantPlotData[graphDescription.getYField()] = prevXicPoint.y() + intensityDelta;
+            variantPlotData[graphDescription.getYField()] = ms2Point->precursorIntensity;
             variantPlotData[getPrecursorMzKey()] = ms2Point->precursorMz;
             variantPlotData[getSpectrumIdKey()] = ms2Point->spectrumId;
             variantPlotData[getGraphIdKey()] = graphDescription.graphId;
@@ -108,10 +106,7 @@ void GraphDataController::featureSelectionChanged(const QMultiHash<SampleId, Fea
         for (int xicIndex = 0, xicCount = xicPoints.length(); xicIndex < xicCount; ++xicIndex) {
             const QPointF &xicPoint = xicPoints[xicIndex];
 
-            const bool beforeMs1 = xicIndex == 0;
-            const QPointF &prevXicPoint = beforeMs1 ? QPointF(0.0, 0.0) : xicPoints[xicIndex - 1];
-            addMs2ScanPointToGraph(prevXicPoint, xicPoint, beforeMs1, false, ms2ScanPoints,
-                xicGraphDescription, nextMs2Index, moreMs2Points, xicGraph);
+            addMs2ScanPointToGraph(xicPoint, ms2ScanPoints, xicGraphDescription, nextMs2Index, moreMs2Points, xicGraph);
 
             QVariantMap variantPlotData;
             variantPlotData[xicGraphDescription.getXField()] = xicPoint.x();
@@ -122,8 +117,7 @@ void GraphDataController::featureSelectionChanged(const QMultiHash<SampleId, Fea
         // ms2 scans after ms1 finished for this feature
         if (moreMs2Points) {
             const QPointF infinityPoint = QPointF(std::numeric_limits<qreal>::max(), 0.0);
-            addMs2ScanPointToGraph(xicPoints.last(), infinityPoint, false, true, ms2ScanPoints,
-                xicGraphDescription, nextMs2Index, moreMs2Points, xicGraph);
+            addMs2ScanPointToGraph(infinityPoint, ms2ScanPoints, xicGraphDescription, nextMs2Index, moreMs2Points, xicGraph);
         }
 
         // add mass peak graph info

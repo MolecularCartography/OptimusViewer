@@ -104,8 +104,9 @@ void FeatureDataSource::fetchMs2Scans(const QMultiHash<SampleId, FeatureId> &fea
         return;
     }
 
-    QString queryStr = "SELECT FMT.sample_id, FMT.feature_id, FS.scan_time, FS.precursor_mz, FS.id FROM FeatureMassTrace AS FMT, "
-        "MassTraceFragmentationSpectrum AS MSFS, FragmentationSpectrum AS FS WHERE FMT.id = MSFS.mt_id AND MSFS.spectrum_id = FS.id AND (";
+    QString queryStr = "SELECT FMT.sample_id, FMT.feature_id, FS.scan_time, FS.precursor_mz, FS.precursor_intensity, FS.id "
+        "FROM FeatureMassTrace AS FMT, MassTraceFragmentationSpectrum AS MSFS, FragmentationSpectrum AS FS "
+        "WHERE FMT.id = MSFS.mt_id AND MSFS.spectrum_id = FS.id AND (";
     QVariantList bindParameters;
     const QString queryConjunction = " OR ";
     foreach(const SampleId &sampleId, featuresToExtract.uniqueKeys()) {
@@ -131,7 +132,7 @@ void FeatureDataSource::fetchMs2Scans(const QMultiHash<SampleId, FeatureId> &fea
         const SampleId sampleId = query.value(0).value<SampleId>();
         const SampleId featureId = query.value(1).value<FeatureId>();
         ms2Scans[sampleId][featureId].append(Ms2ScanInfo(query.value(2).toReal(), query.value(3).toReal(),
-            query.value(4).value<FragmentationSpectrumId>()));
+            query.value(4).toReal(), query.value(5).value<FragmentationSpectrumId>()));
     }
 }
 

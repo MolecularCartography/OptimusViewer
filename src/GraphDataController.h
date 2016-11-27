@@ -81,7 +81,7 @@ private:
     QVariantMap ms1graphDescriptionToMap(const Ms1GraphDescriptor &graphDescription) const;
     QVariantMap xicGraphDescriptionToMap(const XicGraphDescriptor &graphDescription) const;
     QVariantMap msngraphDescriptionToMap(const MsnGraphDescriptor &graphDescription) const;
-    void addMs2ScanPointToGraph(const QPointF &prevXicPoint, const QPointF &nextXicPoint, bool isBeforeMs1, bool isAfterMs1, const QList<Ms2ScanInfo> &ms2ScanPoints,
+    void addMs2ScanPointToGraph(const QPointF &nextXicPoint, const QList<Ms2ScanInfo> &ms2ScanPoints,
         const Ms1GraphDescriptor &graphDescription, int &nextMs2Index, bool &moreMs2Points, QVariantList &xicGraph);
 
     QMultiHash<SampleId, FeatureId> currentFeatures;

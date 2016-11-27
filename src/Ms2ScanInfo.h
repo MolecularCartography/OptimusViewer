@@ -6,10 +6,11 @@
 namespace ov {
 
 struct Ms2ScanInfo {
-    Ms2ScanInfo(qreal scanTime, qreal precursorMz, const FragmentationSpectrumId &spectrumId);
+    Ms2ScanInfo(qreal scanTime, qreal precursorMz, qreal precursorIntensity, const FragmentationSpectrumId &spectrumId);
 
     qreal scanTime;
     qreal precursorMz;
+    qreal precursorIntensity;
     FragmentationSpectrumId spectrumId;
 };
 
