@@ -170,13 +170,15 @@ void FeatureTableWidget::resetColumnHiddenState()
     const int modelColumnCount = model()->columnCount();
     for (int column = 0; column < modelColumnCount; ++column) {
         setColumnHidden(column, false);
-        resizeColumnToContents(column);
+        if (column >= countOfFrozenColumns) {
+            resizeColumnToContents(column);
+        }
     }
 
     for (int column = 0; column < modelColumnCount; ++column) {
         if (column < countOfFrozenColumns) {
             frozenTableView->setColumnHidden(column, false);
-            frozenTableView->resizeColumnToContents(column);
+            //frozenTableView->resizeColumnToContents(column);
         } else {
             frozenTableView->setColumnHidden(column, true);
         }

@@ -244,7 +244,12 @@ function isAuxPoint(point) {
 function generateMs1GraphTitle(graphDescriptor) {
     var title = 'Feature ID: ' + graphDescriptor[dataController.featureIdKey];
     if (graphDescriptor[dataController.compoundIdGraphKey].length > 0) {
-        title += '<br>Compound ID: ' + graphDescriptor[dataController.compoundIdGraphKey].join('; ');
+        var maxCompoundIdLength = 97;
+        var compoundId = graphDescriptor[dataController.compoundIdGraphKey].join('; ');
+        if (compoundId.length > maxCompoundIdLength) {
+            compoundId = compoundId.substr(0, maxCompoundIdLength) + '...';
+        }
+        title += '<br>Compound ID: ' + compoundId;
     }
     title += '<br>Consensus m/z: ' + graphDescriptor[dataController.consensusMzGraphKey].round(4)
         + '<br>Sample: ' + graphDescriptor[dataController.sampleNameGraphKey];
