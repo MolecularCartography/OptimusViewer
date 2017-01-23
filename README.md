@@ -1,8 +1,8 @@
-# OptimusViewer: application for visualizing LC-MS features detected with [Optimus workflow](https://github.com/alexandrovteam/Optimus).
+# OptimusViewer: application for visualizing LC-MS features detected with [Optimus workflow](https://github.com/MolecularCartography/Optimus).
 
 ## What it does?
 
-OptimusViewer is designed to complement the visualization part of Optimus workflow. OptimusViewer allows one to visualize plots of extracted ion chromatograms (XIC), MS peaks and MS2 spectra corresponding to features detected with Optimus. Moreover, all these plots can be overlaid for different features and/or different LC-MS runs to streamline any comparative analysis.
+OptimusViewer is designed to complement the visualization part of the [Optimus workflow](https://github.com/MolecularCartography/Optimus). OptimusViewer allows one to visualize plots of extracted ion chromatograms (XIC), MS peaks and MS2 spectra corresponding to features detected with Optimus. Moreover, all these plots can be overlaid for different features and/or different LC-MS runs to streamline any comparative analysis.
 
 <img src="img/screenshot.png"/>
 
