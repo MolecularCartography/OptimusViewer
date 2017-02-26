@@ -8,7 +8,7 @@ OptimusViewer is designed to complement the visualization part of the [Optimus w
 
 ## Quick start guide
 
-Go to `Downloads` directory in this repository and download a ZIP archive with the application according to your OS. Unzip the archive and launch `OptimusViewer` executable file.
+Go to the [Releases](https://github.com/MolecularCartography/OptimusViewer/releases) section of this repository and download a ZIP archive with the application according to your OS. Unzip the archive and launch `OptimusViewer` executable file.
 
 *OS X users*: you might have a problem with running the application as it is not distributed via Mac App Store. Follow [this instruction by Apple](https://support.apple.com/kb/PH18657?locale=en_US) to make an exception for OptimusViewer.
 
