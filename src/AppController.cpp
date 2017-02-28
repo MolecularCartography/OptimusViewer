@@ -10,7 +10,7 @@ namespace ov {
 bool AppController::staticInitializationDone = false;
 
 AppController::AppController()
-    : featureModel(NULL, &dataSource), graphDataController(&dataSource), featureTableExporter(featureModel)
+    : featureModel(NULL, &dataSource), graphDataController(&dataSource), featureTableExporter(view)
 {
     initStatic();
     connectSingals();

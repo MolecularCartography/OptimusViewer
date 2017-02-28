@@ -6,6 +6,7 @@
 
 #include "Globals.h"
 
+class QAbstractItemModel;
 class QAction;
 class QItemSelection;
 class QWebView;
@@ -30,6 +31,7 @@ public:
     ~AppView();
 
     void initViews(FeatureTableModel *model);
+    const QAbstractItemModel * getTableModel() const;
 
 signals:
     void open();

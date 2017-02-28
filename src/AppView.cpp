@@ -209,4 +209,9 @@ void AppView::setFeatureTableIndexWidget(const QModelIndex &index, QWidget *w)
     featureTableView->setIndexWidget(proxyModel->mapFromSource(index), w);
 }
 
+const QAbstractItemModel * AppView::getTableModel() const
+{
+    return featureTableView->model();
+}
+
 } // namespace ov

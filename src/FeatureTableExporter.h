@@ -5,19 +5,19 @@
 
 namespace ov {
 
-class FeatureTableModel;
+class AppView;
 
 class FeatureTableExporter: public QObject
 {
     Q_OBJECT
 public:
-    FeatureTableExporter(const FeatureTableModel &model);
+    FeatureTableExporter(const AppView &appView);
 
 public slots:
     void exportFeatures(const QVector<int> &visibleColumns);
 
 private:
-    const FeatureTableModel &model;
+    const AppView &appView;
 };
 
 } // namespace ov
