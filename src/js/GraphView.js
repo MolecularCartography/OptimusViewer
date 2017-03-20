@@ -12,6 +12,8 @@ var graphXFieldKey = 'xField';
 var graphYFieldKey = 'yField';
 var graphColorKey = 'lineColor';
 
+var xicPeakZoomOffset = 7.5;
+
 var actualPlotData = {};
 var xicPlotFilling = true;
 
@@ -696,8 +698,22 @@ function updateXicChartData(graphDescriptors, points, plotFilling) {
     if (null !== xicChart) {
         xicChart.clear();
     }
+    var xicGuides = createXicGuides(xicGraphs, graphDescriptors);
     chartsById[graphExporter.xicChartId] = createXicChart('xic_container', points,
-        xicGraphs, createXicGuides(xicGraphs, graphDescriptors));
+        xicGraphs, xicGuides);
+
+    var minRt = Number.POSITIVE_INFINITY;
+    var maxRt = Number.NEGATIVE_INFINITY;
+    for (var i = xicGuides.length - 1; i >= 0; i--) {
+        var cur = xicGuides[i];
+        if (cur.value < minRt) {
+            minRt = cur.value;
+        }
+        if (cur.toValue > maxRt) {
+            maxRt = cur.toValue;
+        }
+    }
+    chartsById[graphExporter.xicChartId].valueAxes[0].zoomToValues(Math.max(minRt - xicPeakZoomOffset, 0), maxRt + xicPeakZoomOffset);
 }
 
 function updateChartData(data) {
