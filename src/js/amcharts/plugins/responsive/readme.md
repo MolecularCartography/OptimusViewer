@@ -1,6 +1,6 @@
 # amCharts Responsive
 
-Version: 1.0.2
+Version: 1.0.5
 
 
 ## Description
@@ -340,6 +340,15 @@ http://www.apache.org/licenses/LICENSE-2.0
 
 
 ## Changelog
+
+### 1.0.5
+* Fixed an issue where Responsive plugin was disabling initial animations.
+
+### 1.0.4
+* Fixed errors when legend was `null` (thanks Hasan Akgün)
+
+### 1.0.3
+* Fixed issue with Stock Chart when Period Selector and Data Set Selector were turned off
 
 ### 1.0.2
 * Fixed a bug where the plugin was causing an error when chart/map container was being hidden
