@@ -135,6 +135,9 @@ void FeatureTableWidget::showHideColumnsTriggered()
         const QBitArray updatedHeaders = d.getHeaderVisibility();
         Q_ASSERT(updatedHeaders.size() == headers.size());
         for (int i = 0; i < columnCount; ++i) {
+            if (i < countOfFrozenColumns) {
+                frozenTableView->setColumnHidden(i, !updatedHeaders.testBit(i));
+            }
             setColumnHidden(i, !updatedHeaders.testBit(i));
         }
     }
