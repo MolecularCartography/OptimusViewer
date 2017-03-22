@@ -550,23 +550,25 @@ function createXicChart(div_id, dataProvider, graphs, guides) {
             'text': 'Extracted Ion Chromatogram of Selected Features'
         }],
         'valueAxes': [{
-            'id': 'x',
-            'position': 'bottom',
-            'dashLength': 1,
-            'title': 'Retention time [s]',
-            'guides': guides
-        }, {
-            'id': 'y',
-            'dashLength': 1,
-            'position': 'left',
-            'title': 'Ion count',
-            'labelFunction': formatNumberAsExponential
-        }],
+                'id': 'x',
+                'position': 'bottom',
+                'dashLength': 1,
+                'title': 'Retention time [s]',
+                'guides': guides
+            }, {
+                'id': 'y',
+                'dashLength': 1,
+                'position': 'left',
+                'title': 'Ion count',
+                'labelFunction': formatNumberAsExponential
+            }
+        ],
         'chartScrollbar': generatePlotScrollbarDescriptor(),
         'chartCursor': {
             'valueLineAxis': 'y',
-            'valueLineBalloonEnabled': true
+            'valueLineBalloonEnabled': true,
         },
+        'hideYScrollbar': true,
         'marginLeft': 60,
         'marginBottom': 60,
         'marginRight': 60,
@@ -637,6 +639,7 @@ function createMassPeakChart(div_id, dataProvider, graphs, fragmentationSpectra)
             'valueLineAxis': 'y',
             'valueLineBalloonEnabled': true,
         },
+        'hideYScrollbar': true,
         'legend': {
             'enabled': fragmentationSpectra,
             'switchable': graphs.length > 1,
@@ -645,17 +648,18 @@ function createMassPeakChart(div_id, dataProvider, graphs, fragmentationSpectra)
         },
         'titles': getMassPeakChartTitle(fragmentationSpectra),
         'valueAxes': [{
-            'id': 'x',
-            'position': 'bottom',
-            'dashLength': 1,
-            'title': 'm/z'
-        }, {
-            'id': 'y',
-            'dashLength': 1,
-            'position': 'left',
-            'title': 'Ion count',
-            'labelFunction': formatNumberAsExponential
-        }],
+                'id': 'x',
+                'position': 'bottom',
+                'dashLength': 1,
+                'title': 'm/z'
+            }, {
+                'id': 'y',
+                'dashLength': 1,
+                'position': 'left',
+                'title': 'Ion count',
+                'labelFunction': formatNumberAsExponential
+            }
+        ],
         'export': generatePlotExportDescriptor(graphExporter.massPeakChartId, false),
         'responsive': {
             'enabled': true

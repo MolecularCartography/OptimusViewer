@@ -330,7 +330,13 @@ namespace {
 
 int versionToInt(const QString &strVersion)
 {
-    return QString(strVersion).replace(".", "").toInt();
+    QStringList versionDigits = strVersion.split(".");
+    std::reverse(versionDigits.begin(), versionDigits.end());
+    int result = 0;
+    for (int i = 0; i < versionDigits.length(); ++i) {
+        result += versionDigits[i].toInt() * pow(10, i + 2); // TODO: unsafe if some part of version number go above 100
+    }
+    return result;
 }
 
 QString getMetaInfoValue(const QString &key)
