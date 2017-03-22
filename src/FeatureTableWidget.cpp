@@ -31,6 +31,7 @@ FeatureTableWidget::FeatureTableWidget(QAbstractItemModel *model, int countOfFro
     connectGuiSignals();
 
     setItemDelegate(new FeatureTableItemDelegate(this));
+    frozenTableView->setItemDelegate(new FeatureTableItemDelegate(this));
 }
 
 FeatureTableWidget::~FeatureTableWidget()
@@ -86,6 +87,9 @@ void FeatureTableWidget::connectGuiSignals()
     connect(frozenHeaderView, &QHeaderView::customContextMenuRequested, this, &FeatureTableWidget::headerContextMenu);
     connect(frozenHeaderView, &QHeaderView::sortIndicatorChanged, this, &FeatureTableWidget::headerSortIndicatorChanged);
     connect(frozenHeaderView, &QHeaderView::sectionResized, this, &FeatureTableWidget::frozenColumnResized);
+
+    connect(selectionModel(), SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)), frozenTableView->viewport(), SLOT(update()));
+    connect(selectionModel(), SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)), viewport(), SLOT(update()));
 }
 
 void FeatureTableWidget::frozenColumnResized(int logicalIndex, int oldSize, int newSize)

@@ -97,12 +97,14 @@ void AppView::featureTableSelectionChanged(const QItemSelection &selected, const
     Q_ASSERT(NULL != proxyModel);
     FeatureTableModel *model = getFeatureTableModel();
     Q_ASSERT(NULL != model);
+
     foreach (const QModelIndex &index, featureTableView->selectionModel()->selectedIndexes()) {
         if (index.column() > 4) {
-            const FeatureId featureId = model->data(model->index(proxyModel->mapToSource(index).row(), 0)).value<FeatureId>(); // the 0th column contains feature id
-            const SampleId sampleId = model->getSampleIdByColumnNumber(proxyModel->mapToSource(index).column());
+            const QModelIndex sourceIndex = proxyModel->mapToSource(index);
+            const FeatureId featureId = model->data(model->index(sourceIndex.row(), 0)).value<FeatureId>(); // the 0th column contains feature id
+            const SampleId sampleId = model->getSampleIdByColumnNumber(sourceIndex.column());
             if (!featureMzs.contains(featureId)) {
-                featureMzs[featureId] = model->data(model->index(proxyModel->mapToSource(index).row(), 1)).toReal(); // the 1st column contains mz value
+                featureMzs[featureId] = model->data(model->index(sourceIndex.row(), 1)).toReal(); // the 1st column contains mz value
             }
             currentSelection.insert(sampleId, featureId);
         }

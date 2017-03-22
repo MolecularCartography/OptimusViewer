@@ -138,17 +138,16 @@ void FeatureDataSource::fetchMs2Scans(const QMultiHash<SampleId, FeatureId> &fea
 
 bool FeatureDataSource::setActiveFeatures(const QMultiHash<SampleId, FeatureId> &featuresBySample)
 {
+    currentFeatures.clear();
+    currentMs2Scans.clear();
+
     if (featuresBySample.isEmpty()) {
-        currentFeatures.clear();
-        currentMs2Scans.clear();
         return true;
     }
 
     // Limit on number of SQLite query parameters
     // TODO: consider splitting the query into multiple ones.
     if (featuresBySample.values().size() * 2 > QUERY_PARAMS_LIMIT) {
-        currentFeatures.clear();
-        currentMs2Scans.clear();
         return false;
     }
 
