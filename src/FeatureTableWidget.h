@@ -16,6 +16,7 @@ public:
 
     void setColumnHidden(int column, bool hide);
     void resetColumnHiddenState();
+    void setIndexWidget(const QModelIndex &index, QWidget *w);
 
 protected:
     void resizeEvent(QResizeEvent *event);

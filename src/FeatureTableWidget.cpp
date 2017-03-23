@@ -122,6 +122,12 @@ void FeatureTableWidget::hideColumnTriggered()
     setColumnHidden(lastReferredLogicalColumn, true);
 }
 
+void FeatureTableWidget::setIndexWidget(const QModelIndex &index, QWidget *w)
+{
+    QTableView::setIndexWidget(index, w);
+    frozenTableView->setIndexWidget(index, w);
+}
+
 void FeatureTableWidget::showHideColumnsTriggered()
 {
     Q_ASSERT(-1 != lastReferredLogicalColumn);

@@ -185,7 +185,7 @@ QVariant FeatureTableModel::compoundIdColumnData(const QModelIndex &index)
         QStringList resultAnns;
         QStringList compIds;
         bool linkExists = false;
-        foreach(const QStringPair compAndLink, compoundsAndLinks) {
+        foreach(const QStringPair &compAndLink, compoundsAndLinks) {
             if (!compAndLink.second.isEmpty()) {
                 resultAnns.append(QString("<a href=\"%2\">%1</a>").arg(compAndLink.first, compAndLink.second));
                 linkExists = true;
