@@ -18,7 +18,7 @@ bool FeatureTableProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex &
     QAbstractItemModel *originalModel = sourceModel();
     const int columnNum = originalModel->columnCount();
     for (int column = 0; column < columnNum; ++column) {
-        if (originalModel->data(originalModel->index(sourceRow, column, sourceParent)).toString().contains(filter)) {
+        if (originalModel->data(originalModel->index(sourceRow, column, sourceParent)).toString().contains(filter, Qt::CaseInsensitive)) {
             return true;
         }
     }
