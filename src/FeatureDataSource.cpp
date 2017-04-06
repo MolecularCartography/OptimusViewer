@@ -1,3 +1,5 @@
+#include <math.h>
+
 #include <QApplication>
 #include <QDataStream>
 #include <QFileDialog>
