@@ -378,12 +378,6 @@ bool FeatureDataSource::isDataSourceVersionSupported()
         return false;
     }
 
-    if (dataSourceCurOptimusVersion > curSupportedVersion) {
-        QMessageBox::warning(QApplication::activeWindow(), tr("Warning"),
-            tr("This Optimus database was created by Optimus version %1 "
-            "which is newer than expected by the current version of OptimusViewer. "
-            "Some features might be not available.").arg(curOptimusVersionStr));
-    }
     return true;
 }
 
