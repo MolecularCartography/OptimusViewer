@@ -72,7 +72,7 @@ void AppView::aboutTriggered()
     QString info = stream.readAll();
     file.close();
 
-    info.prepend(QString("OptimusViewer version %1.%2<br><br>").arg(CURRENT_OPTIMUS_VERSION).arg(QDate::fromString(__DATE__, "MMM dd yyyy").toString("yyyy.MM.dd")));
+    info.prepend(QString("OptimusViewer version %1<br><br>").arg(CURRENT_OPTIMUS_VERSION));
 
     QMessageBox::information(this, tr("About OptimusViewer"), info);
 }
